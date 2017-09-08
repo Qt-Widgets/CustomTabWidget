@@ -3,7 +3,7 @@
 #include <QStyleFactory>
 #include <QTabWidget>
 
-#include "splitter.h"
+#include "include/splitter.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
