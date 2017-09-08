@@ -1,0 +1,38 @@
+
+
+MainWindow
+"responsible for creating FDockingSystem"
+
+FDocking System (splitter manager)
+"resposible for handling splitters, like adding, removing, cleaning"
+
+TabWidgetContainer
+"Works as a container and interface for tabs, menu button, toolbar"
+
+TabWidget : QTabWidget
+"has all tabs and widgets that they contain. Also responsible for drawing drag indicators."
+
+
+--------------------------
+Problems?
+
+The Manager
+	1. Is the manager really necessary? Could the cleaning of splitters be done after the action? If this was possible it would make the code MUCH more simple.
+		..perhaps we can use Splitter class that already subclasses QSplitter?
+	
+	2. splitter manager is now static variable in MainWindow. This is done because we have to be able to access the manager when we want to split a widget. (this happens in TabWidget::dropEvent)
+
+The Container
+	1. now everything is accessed trough the container only to create a common interface for actions. So it provides helper functions that can access variables inside the container like for example, QWidget *TabWidgetContainer::tab(int index) { return mTabWidget.widget(index); } The reason this was done: so that you can call container->tab(index), and you don't have to access local variable inside the container.
+
+
+--------------------------
+Something to try:
+
+Removing Manager
+	- TabWidget should know what splitter it belogns to. mParentSplitter.
+	- Splitter should handle cleaning any dangling splitters.
+
+Container:
+	- Getting rid of TabWidgetContainer. The only reason to have a container is that we can subclass qdockwidget, so that we can create floating windows.
+	- Just keep TabWidget in the project as long as possible without adding the container.
