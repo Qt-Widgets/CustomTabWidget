@@ -3,8 +3,6 @@
 # Project created by QtCreator 2017-09-08T14:42:18
 #
 #-------------------------------------------------
-INCLUDEPATH += $$PWD/editor-widgets/include
-DEPENDPATH += $$PWD/editor-widgets/include
 
 QT       += core gui
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -14,16 +12,18 @@ TEMPLATE = app
 # Compiler warnings when using depricated qt features.
 DEFINES += QT_DEPRECATED_WARNINGS
 
-SUBDIRS = \
-		editor-widgets
-
 HEADERS  += mainwindow.h \
-		include\drawoverlay.h
+        include\drawoverlay.h \
 		include\splitter.h \
+		include\tabwidget.h \
+		include\tabbar.h \
+		utils.h
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
 		source\splitter.cpp \
-		source\drawoverlay.cpp
+		source\drawoverlay.cpp \
+		source\tabbar.cpp \
+		source\tabwidget.cpp
 
 FORMS    += mainwindow.ui \

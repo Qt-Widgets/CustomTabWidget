@@ -1,9 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QStyleFactory>
-#include <QTabWidget>
+#include <QApplication>
 
 #include "include/splitter.h"
+#include "include/tabwidget.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	QApplication::setAttribute(Qt::AA_CompressHighFrequencyEvents);
 	QApplication::setStyle(QStyleFactory::create("fusion"));
 
+	QApplication::setStartDragDistance(20);
+
     ui->setupUi(this);
 	setAnimated(false);
 	createWidgets();
@@ -30,7 +33,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::createWidgets() {
 	Splitter* splitter = new Splitter(this);
-	QTabWidget* tabWidget = new QTabWidget(this);
+	TabWidget* tabWidget = new TabWidget(this);
 	tabWidget->addTab(new QWidget(this), "blaa1");
 	tabWidget->addTab(new QWidget(this), "blaa2");
 	tabWidget->addTab(new QWidget(this), "blaa3");
