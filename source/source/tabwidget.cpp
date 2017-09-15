@@ -101,14 +101,21 @@ void TabWidget::dropEvent(QDropEvent *event) {
         if (mIndicatorArea == utils::DropArea::TABBAR) {
             insertTab(targetIndex, sourceTab, tabTitle);
         } else {
-			//insert to existing splitter
-			Splitter* sourceSplitter = mSplitters.find(this).value();
-			Q_ASSERT(sourceSplitter);
-			QWidget* mainWindow = sourceSplitter->root()->parentWidget();
-			sourceSplitter->insertWidget(0, new TabWidget(mainWindow, sourceSplitter));
+			Splitter* targetSplitter = mSplitters.find(this).value();
+			Q_ASSERT(targetSplitter);
+			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
+			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
+			bool dropToRight = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::RIGHT);
+			bool createNewSplitter = vertical != dropVertically;
 
-			//create new splitter and insert to that
-
+			if (createNewSplitter) {
+				//Splitter* newSplitter
+			} else {
+				QWidget* mainWindow = targetSplitter->root()->parentWidget();
+				TabWidget* newTabWidget = new TabWidget(mainWindow, targetSplitter);
+				sourceSplitter->insertWidget(0, newTabWidget);
+				newTabWidget->insertTab(0, sourceTab, tabTitle);
+			}
 			
             //TabWidgetContainer* sourceContainer = static_cast<TabWidgetContainer*>(sourceTabWidget->parentWidget());
             //TabWidgetContainer* targetContainer = static_cast<TabWidgetContainer*>(this->parentWidget());
