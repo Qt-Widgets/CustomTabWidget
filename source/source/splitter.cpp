@@ -1,6 +1,8 @@
 #include "include\splitter.h"
 #include "include\tabwidget.h"
 
+Splitter* Splitter::mRoot = nullptr;
+
 Splitter::Splitter(QWidget *parent) : QSplitter(parent) {
 
 }
@@ -45,4 +47,8 @@ Splitter* Splitter::findSplitter(QWidget* target, int& index) {
 		}
 	}
 	return nullptr;
+}
+
+Splitter* Splitter::root() {
+	return mRoot;
 }

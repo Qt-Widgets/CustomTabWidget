@@ -2,6 +2,7 @@
 #include <QDragMoveEvent>
 #include <QDebug>
 #include <QDrag>
+#include <QMap>
 #include <QMimeData>
 #include <QWindow>
 #include <QApplication>
@@ -13,6 +14,7 @@
 
 static QString sourceIndexMimeDataKey() { return QStringLiteral("source/index"); }
 static QString sourceTabTitleMimeDataKey() { return QStringLiteral("source/tabtitle"); }
+QMap<TabWidget*, Splitter*> TabWidget::mSplitters;
 
 TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
     : QTabWidget(parent)
@@ -37,12 +39,14 @@ TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
 	mMenuButton->setStyleSheet(style);
 	setCornerWidget(mMenuButton);
 
+	Q_ASSERT(splitter);
 	mSplitters.insert(this, splitter);
 
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
 }
 
 TabWidget::~TabWidget() {
+	mSplitters.remove(this);
     setAcceptDrops(false);
 }
 
@@ -98,13 +102,14 @@ void TabWidget::dropEvent(QDropEvent *event) {
             insertTab(targetIndex, sourceTab, tabTitle);
         } else {
 			//insert to existing splitter
-			Splitter* sourceSplitter = mSplitters.find();
+			Splitter* sourceSplitter = mSplitters.find(this).value();
+			Q_ASSERT(sourceSplitter);
+			QWidget* mainWindow = sourceSplitter->root()->parentWidget();
+			sourceSplitter->insertWidget(0, new TabWidget(mainWindow, sourceSplitter));
 
 			//create new splitter and insert to that
 
 			
-			//QWidget* mainWindow = mRootSplitter->parentWidget();
-			targetSplitter->insertWidget(0, new TabWidget(mainWindow));
             //TabWidgetContainer* sourceContainer = static_cast<TabWidgetContainer*>(sourceTabWidget->parentWidget());
             //TabWidgetContainer* targetContainer = static_cast<TabWidgetContainer*>(this->parentWidget());
             //MainWindow::splitterManager()->splitTabWidget(sourceIndex, sourceContainer, targetContainer, mIndicatorArea, tabTitle);

@@ -14,7 +14,7 @@ class TabWidget : public QTabWidget
 {
     Q_OBJECT
 public:
-    explicit TabWidget(QWidget *parent = 0, Splitter* splitter);
+    explicit TabWidget(QWidget *parent = 0, Splitter* splitter = 0);
     virtual ~TabWidget();
 
 protected:

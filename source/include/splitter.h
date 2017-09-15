@@ -10,7 +10,8 @@ public:
 	QList<QWidget*> getWidgets();
 	bool hasTabWidgets();
 	Splitter* findSplitter(QWidget* target, int& index);
+	Splitter* root();
 
-private:
+protected:
 	static Splitter* mRoot;
 };
