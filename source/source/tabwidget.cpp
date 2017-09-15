@@ -14,7 +14,7 @@
 static QString sourceIndexMimeDataKey() { return QStringLiteral("source/index"); }
 static QString sourceTabTitleMimeDataKey() { return QStringLiteral("source/tabtitle"); }
 
-TabWidget::TabWidget(QWidget *parent)
+TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
     : QTabWidget(parent)
     , mDrawOverlay(new DrawOverlay(this))
 	, mTabBar(new TabBar(this))
@@ -24,12 +24,26 @@ TabWidget::TabWidget(QWidget *parent)
     setAcceptDrops(true);
     //setTabsClosable(true);
 
+	static QString style("QPushButton {"
+		"   background-color: #757575;"
+		"   padding-left: 4px;"
+		"   padding-right: 4px;"
+		"   padding-top: 2px;"
+		"   padding-bottom: 2px;"
+		"}");
+
+	mMenuButton = new QPushButton("+", this);
+	mMenuButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+	mMenuButton->setStyleSheet(style);
+	setCornerWidget(mMenuButton);
+
+	mSplitters.insert(this, splitter);
+
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
 }
 
 TabWidget::~TabWidget() {
     setAcceptDrops(false);
-	QObject::disconnect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
 }
 
 void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
@@ -74,13 +88,23 @@ void TabWidget::dropEvent(QDropEvent *event) {
         int sourceIndex = mime->data(sourceIndexMimeDataKey()).toInt();
         QString tabTitle = QString::fromStdString(mime->data(sourceTabTitleMimeDataKey()).toStdString());
         TabWidget* sourceTabWidget = static_cast<TabWidget*>(event->source());
-        QWidget* sourceWidget = sourceTabWidget->widget(sourceIndex);
+		Q_ASSERT(sourceTabWidget);
+        QWidget* sourceTab = sourceTabWidget->widget(sourceIndex);
+		Q_ASSERT(sourceTab);
         QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
         int targetIndex = tabBar()->tabAt(mousePos);
-
+		
         if (mIndicatorArea == utils::DropArea::TABBAR) {
-            insertTab(targetIndex, sourceWidget, tabTitle);
+            insertTab(targetIndex, sourceTab, tabTitle);
         } else {
+			//insert to existing splitter
+			Splitter* sourceSplitter = mSplitters.find();
+
+			//create new splitter and insert to that
+
+			
+			//QWidget* mainWindow = mRootSplitter->parentWidget();
+			targetSplitter->insertWidget(0, new TabWidget(mainWindow));
             //TabWidgetContainer* sourceContainer = static_cast<TabWidgetContainer*>(sourceTabWidget->parentWidget());
             //TabWidgetContainer* targetContainer = static_cast<TabWidgetContainer*>(this->parentWidget());
             //MainWindow::splitterManager()->splitTabWidget(sourceIndex, sourceContainer, targetContainer, mIndicatorArea, tabTitle);
@@ -164,7 +188,7 @@ void TabWidget::updateIndicatorRect() {
     }
 }
 
-void TabWidget::tabDragged(int index) {
+void TabWidget::tabDragged(int index, int tabCount) {
 	if (index == -1) {
 		return;
 	}
@@ -186,4 +210,10 @@ void TabWidget::tabDragged(int index) {
 	drag->setMimeData(mimeData);
 	drag->setPixmap(pixmap);
 	Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
+
+	if (tabCount == 0) {
+		//this will execute after drag is completed.
+
+		//todo: clean up empty widget, and remove splitter if needed.
+	}
 }

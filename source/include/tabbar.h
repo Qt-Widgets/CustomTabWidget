@@ -19,7 +19,7 @@ protected:
 	void mouseMoveEvent(QMouseEvent* event) override;
 
 signals:
-	void mouseDragged(int);
+	void mouseDragged(int index, int tabCount);
 
 private:
 	QPoint mDragStartPosition;

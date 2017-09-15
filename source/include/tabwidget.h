@@ -5,6 +5,7 @@
 #include <utils.h>
 
 #include "include/drawoverlay.h"
+#include "include/splitter.h"
 
 class QDrag;
 class TabBar;
@@ -13,7 +14,7 @@ class TabWidget : public QTabWidget
 {
     Q_OBJECT
 public:
-    explicit TabWidget(QWidget *parent = 0);
+    explicit TabWidget(QWidget *parent = 0, Splitter* splitter);
     virtual ~TabWidget();
 
 protected:
@@ -23,18 +24,16 @@ protected:
     void dropEvent(QDropEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
-signals:
-    void testIfEmpty();
-
 private:
     void updateIndicatorRect();
     void updateIndicatorArea(QPoint& p);
-	void tabDragged(int index);
+	void tabDragged(int index, int tabCount);
 
 private:
     const int mIndicatorMargin = 10;
     utils::DropArea mIndicatorArea = utils::DropArea::INVALID;
     DrawOverlay* mDrawOverlay;
-	QPoint mDragStartPosition;
 	TabBar* mTabBar;
+	QPushButton* mMenuButton;
+	static QMap<TabWidget*, Splitter*> mSplitters;
 };

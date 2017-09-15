@@ -20,5 +20,5 @@ void TabBar::mouseMoveEvent(QMouseEvent* event) {
 		return;
 	}
 
-	emit mouseDragged(mDragIndex);
+	emit mouseDragged(mDragIndex, count());
 }
