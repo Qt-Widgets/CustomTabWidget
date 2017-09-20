@@ -1,5 +1,5 @@
-#include "include\splitter.h"
-#include "include\tabwidget.h"
+#include "include/splitter.h"
+#include "include/tabwidget.h"
 
 Splitter* Splitter::mRoot = nullptr;
 

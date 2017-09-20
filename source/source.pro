@@ -13,17 +13,17 @@ TEMPLATE = app
 DEFINES += QT_DEPRECATED_WARNINGS
 
 HEADERS  += mainwindow.h \
-        include\drawoverlay.h \
-		include\splitter.h \
-		include\tabwidget.h \
-		include\tabbar.h \
-		utils.h
+        include/drawoverlay.h \
+        include/splitter.h \
+        include/tabwidget.h \
+        include/tabbar.h \
+        utils.h
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-		source\splitter.cpp \
-		source\drawoverlay.cpp \
-		source\tabbar.cpp \
-		source\tabwidget.cpp
+        source/splitter.cpp \
+        source/drawoverlay.cpp \
+        source/tabbar.cpp \
+        source/tabwidget.cpp
 
 FORMS    += mainwindow.ui \

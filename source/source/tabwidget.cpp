@@ -89,43 +89,61 @@ void TabWidget::dragLeaveEvent(QDragLeaveEvent* event) {
 void TabWidget::dropEvent(QDropEvent *event) {
     const QMimeData *mime = event->mimeData();
     if (mime->hasText()) {
+        if (mIndicatorArea == utils::DropArea::INVALID) {
+            qDebug() << "ERROR: drop area was invalid.";
+            mDrawOverlay->setRect(QRect());
+            event->ignore();
+            return;
+        }
+
         int sourceIndex = mime->data(sourceIndexMimeDataKey()).toInt();
         QString tabTitle = QString::fromStdString(mime->data(sourceTabTitleMimeDataKey()).toStdString());
         TabWidget* sourceTabWidget = static_cast<TabWidget*>(event->source());
 		Q_ASSERT(sourceTabWidget);
         QWidget* sourceTab = sourceTabWidget->widget(sourceIndex);
 		Q_ASSERT(sourceTab);
-        QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
-        int targetIndex = tabBar()->tabAt(mousePos);
 		
         if (mIndicatorArea == utils::DropArea::TABBAR) {
+            //dropped on tabbar
+            QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
+            int targetIndex = tabBar()->tabAt(mousePos);
             insertTab(targetIndex, sourceTab, tabTitle);
         } else {
+            //dropped on widget area
 			Splitter* targetSplitter = mSplitters.find(this).value();
+            QWidget* mainWindow = targetSplitter->root()->parentWidget();
 			Q_ASSERT(targetSplitter);
 			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
 			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
-			bool dropToRight = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::RIGHT);
 			bool createNewSplitter = vertical != dropVertically;
 
 			if (createNewSplitter) {
-				//Splitter* newSplitter
+                //Splitter* newSplitter
+
+                //TabWidgetContainer* sourceContainer = static_cast<TabWidgetContainer*>(sourceTabWidget->parentWidget());
+                //TabWidgetContainer* targetContainer = static_cast<TabWidgetContainer*>(this->parentWidget());
+                //MainWindow::splitterManager()->splitTabWidget(sourceIndex, sourceContainer, targetContainer, mIndicatorArea, tabTitle);
 			} else {
-				QWidget* mainWindow = targetSplitter->root()->parentWidget();
+                int targetIndex = findTargetIndex(targetSplitter);
 				TabWidget* newTabWidget = new TabWidget(mainWindow, targetSplitter);
-				sourceSplitter->insertWidget(0, newTabWidget);
-				newTabWidget->insertTab(0, sourceTab, tabTitle);
-			}
-			
-            //TabWidgetContainer* sourceContainer = static_cast<TabWidgetContainer*>(sourceTabWidget->parentWidget());
-            //TabWidgetContainer* targetContainer = static_cast<TabWidgetContainer*>(this->parentWidget());
-            //MainWindow::splitterManager()->splitTabWidget(sourceIndex, sourceContainer, targetContainer, mIndicatorArea, tabTitle);
+                targetSplitter->insertWidget(targetIndex, newTabWidget);
+                newTabWidget->insertTab(0, sourceTab, tabTitle);
+            }
         }
 
         event->acceptProposedAction();
         event->accept();
         mDrawOverlay->setRect(QRect());
     }
+}
+
+int TabWidget::findTargetIndex(const Splitter* targetSplitter) {
+    QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
+    QWidget* widgetUnderMouse = targetSplitter->childAt(mousePos);
+    int targetIndex = targetSplitter->indexOf(widgetUnderMouse);
+    bool insertAfterTarget = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::RIGHT);
+    targetIndex += insertAfterTarget ? 1 : 0;
+    return targetIndex;
 }
 
 void TabWidget::resizeEvent(QResizeEvent* event) {
@@ -223,9 +241,19 @@ void TabWidget::tabDragged(int index, int tabCount) {
 	drag->setPixmap(pixmap);
 	Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
 
-	if (tabCount == 0) {
+    if (tabCount == 1) {
 		//this will execute after drag is completed.
 
-		//todo: clean up empty widget, and remove splitter if needed.
+        Splitter* parentSplitter = mSplitters.find(this).value();
+        Q_ASSERT(parentSplitter);
+        if (parentSplitter->count() == 1) {
+            //remove this from splitter
+
+            //remove splitter
+            parentSplitter->deleteLater();
+        }
+
+        //remove this
+        deleteLater();
 	}
 }

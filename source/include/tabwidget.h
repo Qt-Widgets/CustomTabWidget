@@ -28,6 +28,7 @@ private:
     void updateIndicatorRect();
     void updateIndicatorArea(QPoint& p);
 	void tabDragged(int index, int tabCount);
+    int findTargetIndex(const Splitter* targetSplitter);
 
 private:
     const int mIndicatorMargin = 10;
