@@ -29,6 +29,7 @@ private:
     void updateIndicatorArea(QPoint& p);
 	void tabDragged(int index, int tabCount);
     int findTargetIndex(const Splitter* targetSplitter);
+    void drawDropWindow(QPixmap &pixmap, QRect tabRect, QString text);
 
 private:
     const int mIndicatorMargin = 10;

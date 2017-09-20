@@ -8,6 +8,9 @@
 #include <QApplication>
 #include <assert.h>
 #include <mainwindow.h>
+#include <QTextOption>
+#include <QPen>
+#include <QPainter>
 
 #include "include/tabwidget.h"
 #include "include/tabbar.h"
@@ -232,9 +235,15 @@ void TabWidget::tabDragged(int index, int tabCount) {
 	mimeData->setData(sourceIndexMimeDataKey(), QByteArray::number(index));
 	
 	qreal dpr = window()->windowHandle()->devicePixelRatio();
-	QPixmap pixmap(tabBar()->tabRect(index).size() * dpr);
-	pixmap.setDevicePixelRatio(dpr);
-	render(&pixmap);
+    QRect tabRect = QRect(QPoint(), mTabBar->tabRect(index).size());
+    QPixmap pixmap(tabRect.size() * dpr);
+    pixmap.fill(Qt::transparent);
+    pixmap.setDevicePixelRatio(dpr);
+    drawDropWindow(pixmap, tabRect, tabText(index));
+
+//	QPixmap pixmap(tabBar()->tabRect(index).size() * dpr);
+//	pixmap.setDevicePixelRatio(dpr);
+//	render(&pixmap);
 	
 	QDrag* drag = new QDrag(this);
 	drag->setMimeData(mimeData);
@@ -257,3 +266,19 @@ void TabWidget::tabDragged(int index, int tabCount) {
         deleteLater();
 	}
 }
+
+void TabWidget::drawDropWindow(QPixmap &pixmap, QRect tabRect, QString text) {
+    QPen pen;
+    pen.setColor(QColor(Qt::black));
+    pen.setWidth(3);
+
+    QTextOption option;
+    option.setAlignment(Qt::AlignCenter);
+
+    QPainter painter(&pixmap);
+    painter.setBrush(QBrush(QColor(Qt::white)));
+    painter.setPen(pen);
+    painter.drawRoundedRect(tabRect, 5, 5);
+    painter.drawText(tabRect, text, option);
+}
+
