@@ -43,7 +43,7 @@ TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
 	setCornerWidget(mMenuButton);
 
 	Q_ASSERT(splitter);
-	mSplitters.insert(this, splitter);
+    mSplitters.insert(this, splitter);
 
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
 }
@@ -115,23 +115,33 @@ void TabWidget::dropEvent(QDropEvent *event) {
             //dropped on widget area
 			Splitter* targetSplitter = mSplitters.find(this).value();
             QWidget* mainWindow = targetSplitter->root()->parentWidget();
-			Q_ASSERT(targetSplitter);
+            Q_ASSERT(targetSplitter);
 			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
 			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
 			bool createNewSplitter = vertical != dropVertically;
 
 			if (createNewSplitter) {
-                //Splitter* newSplitter
+                //create splitter
+                Splitter* newSplitter = new Splitter(mainWindow);
+                Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
+                newSplitter->setOrientation(orientation);
+                int targetIndex = findTargetIndex(targetSplitter);
+                targetSplitter->insertWidget(targetIndex, newSplitter);
 
-                //TabWidgetContainer* sourceContainer = static_cast<TabWidgetContainer*>(sourceTabWidget->parentWidget());
-                //TabWidgetContainer* targetContainer = static_cast<TabWidgetContainer*>(this->parentWidget());
-                //MainWindow::splitterManager()->splitTabWidget(sourceIndex, sourceContainer, targetContainer, mIndicatorArea, tabTitle);
+                //create tabWidget
+                TabWidget* newTabWidget = new TabWidget(mainWindow, newSplitter);
+                newSplitter->insertWidget(0, newTabWidget);
+                newTabWidget->insertTab(0, sourceTab, tabTitle);
 			} else {
+                //create tabWidget
                 int targetIndex = findTargetIndex(targetSplitter);
 				TabWidget* newTabWidget = new TabWidget(mainWindow, targetSplitter);
                 targetSplitter->insertWidget(targetIndex, newTabWidget);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
             }
+
+            Splitter* sourceSplitter = mSplitters.find(sourceTabWidget).value();
+            sourceSplitter->removeIfEmpty();
         }
 
         event->acceptProposedAction();
@@ -248,23 +258,12 @@ void TabWidget::tabDragged(int index, int tabCount) {
 	QDrag* drag = new QDrag(this);
 	drag->setMimeData(mimeData);
 	drag->setPixmap(pixmap);
-	Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
+
+    Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
 
     if (tabCount == 1) {
-		//this will execute after drag is completed.
-
-        Splitter* parentSplitter = mSplitters.find(this).value();
-        Q_ASSERT(parentSplitter);
-        if (parentSplitter->count() == 1) {
-            //remove this from splitter
-
-            //remove splitter
-            parentSplitter->deleteLater();
-        }
-
-        //remove this
         deleteLater();
-	}
+    }
 }
 
 void TabWidget::drawDropWindow(QPixmap &pixmap, QRect tabRect, QString text) {
@@ -281,4 +280,3 @@ void TabWidget::drawDropWindow(QPixmap &pixmap, QRect tabRect, QString text) {
     painter.drawRoundedRect(tabRect, 5, 5);
     painter.drawText(tabRect, text, option);
 }
-

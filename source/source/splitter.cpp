@@ -13,23 +13,9 @@ void Splitter::setAsRoot() {
 	mRoot = this;
 }
 
-QList<QWidget*> Splitter::getWidgets() {
-	QList<QWidget*> widgets;
-	for (int i = 0; i < count(); i++) {
-		widgets.append(widget(i));
-	}
-	return widgets;
-}
-
 bool Splitter::hasTabWidgets() {
-	QList<QWidget*> widgets = getWidgets();
-	for (QWidget* item : widgets) {
-		TabWidget* tabWidget = static_cast<TabWidget*>(item);
-		if (tabWidget) {
-			return true;
-		}
-	}
-	return false;
+    QList<TabWidget*> widgets = findChildren<TabWidget*>("*", Qt::FindDirectChildrenOnly);
+    return !widgets.isEmpty();
 }
 
 Splitter* Splitter::findSplitter(QWidget* target, int& index) {
@@ -50,5 +36,11 @@ Splitter* Splitter::findSplitter(QWidget* target, int& index) {
 }
 
 Splitter* Splitter::root() {
-	return mRoot;
+    return mRoot;
+}
+
+void Splitter::removeIfEmpty() {
+    if (children().isEmpty()) {
+        deleteLater();
+    }
 }
