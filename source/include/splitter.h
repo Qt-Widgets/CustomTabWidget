@@ -2,6 +2,8 @@
 
 #include <QSplitter>
 
+class TabWidget;
+
 class Splitter : public QSplitter {
 	Q_OBJECT
 public:
@@ -10,7 +12,9 @@ public:
 	bool hasTabWidgets();
 	Splitter* findSplitter(QWidget* target, int& index);
 	Splitter* root();
-    void removeIfEmpty();
+	void removeIfEmpty(Splitter* splitter);
+	void removeAllEmptySplitters();
+	void tabWidgetAboutToDelete(TabWidget* widget);
 
 protected:
 	static Splitter* mRoot;

@@ -24,6 +24,9 @@ protected:
     void dropEvent(QDropEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
+private slots:
+	void onTabBarEmpty();
+
 private:
     void updateIndicatorRect();
     void updateIndicatorArea(QPoint& p);

@@ -3,7 +3,6 @@
 #include <QApplication>
 
 TabBar::TabBar(QWidget *parent) : QTabBar(parent) {
-	
 }
 
 void TabBar::mousePressEvent(QMouseEvent* event) {
@@ -21,4 +20,10 @@ void TabBar::mouseMoveEvent(QMouseEvent* event) {
 	}
 
 	emit mouseDragged(mDragIndex, count());
+}
+
+void TabBar::tabRemoved(int index) {
+	if (count() == 0) {
+		emit hasNoTabs();
+	}
 }
