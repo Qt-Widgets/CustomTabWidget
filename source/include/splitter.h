@@ -9,7 +9,6 @@ class Splitter : public QSplitter {
 public:
 	explicit Splitter(QWidget *parent = 0);
 	void setAsRoot();
-	bool hasTabWidgets();
 	Splitter* findSplitter(QWidget* target, int& index);
 	Splitter* root();
 	void removeIfEmpty(Splitter* splitter);

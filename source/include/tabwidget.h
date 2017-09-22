@@ -24,6 +24,9 @@ protected:
     void dropEvent(QDropEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
 
+	//degubbing
+	void keyReleaseEvent(QKeyEvent *event) override;
+
 private slots:
 	void onTabBarEmpty();
 	void onAddNewTab();
@@ -41,5 +44,4 @@ private:
     DrawOverlay* mDrawOverlay;
 	TabBar* mTabBar;
 	QPushButton* mMenuButton;
-	static QMap<TabWidget*, Splitter*> mSplitters;
 };

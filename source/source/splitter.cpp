@@ -15,11 +15,6 @@ void Splitter::setAsRoot() {
 	mRoot = this;
 }
 
-bool Splitter::hasTabWidgets() {
-    QList<TabWidget*> widgets = findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
-    return !widgets.isEmpty();
-}
-
 Splitter* Splitter::findSplitter(QWidget* target, int& index) {
 	Q_ASSERT(mRoot);
 	QList<Splitter*> splitters = mRoot->findChildren<Splitter*>();
@@ -42,13 +37,41 @@ Splitter* Splitter::root() {
 }
 
 void Splitter::removeIfEmpty(Splitter* splitter) {
-	QList<TabWidget*> widgets = splitter->findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
-	QList<Splitter*> splitters = splitter->findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
+	if (splitter == mRoot) {
+		return;
+	}
+	bool hasTabWidgets = false;
+	bool hasSplitters = false;
+	int splitterCount = 0;
+	Splitter* childSplitter = nullptr;
 
-	if (widgets.count() == 0) {
-		if (splitters.count() == 0) {
-			splitter->deleteLater();
+	for (auto child : splitter->children()) {
+		TabWidget* tabWidget = dynamic_cast<TabWidget*>(child);
+		hasTabWidgets |= tabWidget != nullptr;
+		
+		Splitter* splitter = dynamic_cast<Splitter*>(child);
+		hasSplitters |= splitter != nullptr;
+
+		if (splitter) {
+			if (splitterCount == 0) {
+				childSplitter = splitter;
+			} else {
+				childSplitter = nullptr;
+			}
+			splitterCount++;
 		}
+	}
+	
+	bool isEmpty = !hasSplitters && !hasTabWidgets;
+	bool isLonely = childSplitter && !hasTabWidgets;
+
+	if (isEmpty) {
+		splitter->deleteLater();
+	} else if (isLonely) {
+		//in this case there is only one child splitter and no tabWidgets, so for this
+		//we want to delete this splitter and move children directly to parent object.
+		childSplitter->setParent(splitter->parentWidget());
+		splitter->deleteLater();
 	}
 }
 
@@ -57,21 +80,17 @@ void Splitter::onRemoveAllEmptySplitters() {
 		return;
 	}
 
-	QList<TabWidget*> widgets = mRoot->findChildren<TabWidget*>();
 	QList<Splitter*> splitters = mRoot->findChildren<Splitter*>();
-	splitters.append(mRoot);
+	//splitters.append(mRoot);
 	for (auto splitter : splitters) {
 		removeIfEmpty(splitter);
 	}
-
-	qDebug() << "tabWidgetAboutToDelete";
-
-	qDebug() << " ";
-	qDebug().noquote() << printSplitterTree(mRoot);
-	qDebug() << " ";
 }
 
 void Splitter::tabWidgetAboutToDelete(TabWidget* widget) {
+	if (!widget) {
+		return;
+	}
 	QList<TabWidget*> widgets = findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
 	QList<Splitter*> splitters = findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
 

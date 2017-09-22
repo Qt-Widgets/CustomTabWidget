@@ -17,7 +17,6 @@
 
 static QString sourceIndexMimeDataKey() { return QStringLiteral("source/index"); }
 static QString sourceTabTitleMimeDataKey() { return QStringLiteral("source/tabtitle"); }
-QMap<TabWidget*, Splitter*> TabWidget::mSplitters;
 
 TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
     : QTabWidget(parent)
@@ -42,16 +41,6 @@ TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
 	mMenuButton->setStyleSheet(style);
 	setCornerWidget(mMenuButton);
 	QObject::connect(mMenuButton, &QPushButton::clicked, this, &TabWidget::onAddNewTab);
-
-	Q_ASSERT(splitter);
-	if (mSplitters.contains(this)) {
-		Splitter* oldSplitter = mSplitters[this];
-		oldSplitter->removeIfEmpty(oldSplitter);
-		mSplitters[this] = splitter;
-	} else {
-		mSplitters.insert(this, splitter);
-	}
-
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
 	QObject::connect(mTabBar, &TabBar::hasNoTabs, this, &TabWidget::onTabBarEmpty);
 }
@@ -59,12 +48,10 @@ TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
 TabWidget::~TabWidget() {
     setAcceptDrops(false);
 
-	Splitter* splitter = mSplitters[this];
+	Splitter* splitter = dynamic_cast<Splitter*>(parentWidget());
 	if (splitter) {
 		splitter->tabWidgetAboutToDelete(this);
 	}
-
-	mSplitters.remove(this);
 }
 
 void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
@@ -127,7 +114,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
             insertTab(targetIndex, sourceTab, tabTitle);
         } else {
             //dropped on widget area
-			Splitter* targetSplitter = mSplitters[this];
+			Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
             Q_ASSERT(targetSplitter);
 			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
 			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
@@ -192,17 +179,22 @@ void TabWidget::resizeEvent(QResizeEvent* event) {
     event->accept();
 }
 
+void TabWidget::keyReleaseEvent(QKeyEvent *event) {
+	if (event->key() == Qt::Key_F5) {
+		Splitter* splitter = dynamic_cast<Splitter*>(parentWidget());
+		Q_ASSERT(splitter);
+		qDebug() << " ";
+		qDebug().noquote() << splitter->printSplitterTree(splitter->root());
+		qDebug() << " ";
+	}
+}
+
 void TabWidget::onTabBarEmpty() {
 	deleteLater();
 }
 
 void TabWidget::onAddNewTab() {
 	addTab(new QWidget(this), "blaaNew");
-
-	Splitter* splitter = mSplitters[this];
-	qDebug() << " ";
-	qDebug().noquote() << splitter->printSplitterTree(splitter->root());
-	qDebug() << " ";
 }
 
 void TabWidget::updateIndicatorArea(QPoint& p) {
