@@ -2,8 +2,8 @@
 #include <QTabWidget>
 #include <QFrame>
 #include <QPushButton>
-#include <utils.h>
 
+#include "utils.h"
 #include "include/drawoverlay.h"
 #include "include/splitter.h"
 
@@ -26,6 +26,7 @@ protected:
 
 private slots:
 	void onTabBarEmpty();
+	void onAddNewTab();
 
 private:
     void updateIndicatorRect();

@@ -37,9 +37,9 @@ void MainWindow::createWidgets() {
 	
 	TabWidget* tabWidget = new TabWidget(this, splitter);
 
-	tabWidget->addTab(new QWidget(this), "blaa1");
-	tabWidget->addTab(new QWidget(this), "blaa2");
-	tabWidget->addTab(new QWidget(this), "blaa3");
+	tabWidget->addTab(new QWidget(tabWidget), "blaa1");
+	tabWidget->addTab(new QWidget(tabWidget), "blaa2");
+	tabWidget->addTab(new QWidget(tabWidget), "blaa3");
 	splitter->addWidget(tabWidget);
 
 	setCentralWidget(splitter);

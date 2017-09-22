@@ -1,5 +1,4 @@
-#ifndef UTILS_H
-#define UTILS_H
+#pragma once
 
 namespace utils {
 
@@ -8,5 +7,3 @@ enum DropArea {
 };
 
 }
-
-#endif // UTILS_H

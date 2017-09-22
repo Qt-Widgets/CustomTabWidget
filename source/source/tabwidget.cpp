@@ -41,6 +41,7 @@ TabWidget::TabWidget(QWidget *parent, Splitter* splitter)
 	mMenuButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	mMenuButton->setStyleSheet(style);
 	setCornerWidget(mMenuButton);
+	QObject::connect(mMenuButton, &QPushButton::clicked, this, &TabWidget::onAddNewTab);
 
 	Q_ASSERT(splitter);
 	if (mSplitters.contains(this)) {
@@ -143,10 +144,21 @@ void TabWidget::dropEvent(QDropEvent *event) {
 
 			if (createNewSplitter) {
                 //create splitter
-                Splitter* newSplitter = new Splitter(targetSplitter);
+				QList<TabWidget*> widgets = targetSplitter->findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
+				QList<Splitter*> splitters = targetSplitter->findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
+
+				Splitter* newSplitter = nullptr;
+				if (widgets.count() + splitters.count() >= 1) {
+					newSplitter = new Splitter(targetSplitter);
+					targetSplitter->insertWidget(targetIndex, newSplitter);
+					newSplitter->insertWidget(0, this);
+				} else {
+					//no need to create a new one, just change the orientation of the targetSplitter.
+					newSplitter = targetSplitter;
+				}
+
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
                 newSplitter->setOrientation(orientation);
-                targetSplitter->insertWidget(targetIndex, newSplitter);
 
                 //create tabWidget
                 TabWidget* newTabWidget = new TabWidget(newSplitter, newSplitter);
@@ -182,6 +194,15 @@ void TabWidget::resizeEvent(QResizeEvent* event) {
 
 void TabWidget::onTabBarEmpty() {
 	deleteLater();
+}
+
+void TabWidget::onAddNewTab() {
+	addTab(new QWidget(this), "blaaNew");
+
+	Splitter* splitter = mSplitters[this];
+	qDebug() << " ";
+	qDebug().noquote() << splitter->printSplitterTree(splitter->root());
+	qDebug() << " ";
 }
 
 void TabWidget::updateIndicatorArea(QPoint& p) {
