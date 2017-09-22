@@ -14,7 +14,7 @@ class TabWidget : public QTabWidget
 {
     Q_OBJECT
 public:
-    explicit TabWidget(QWidget *parent = 0, Splitter* splitter = 0);
+    explicit TabWidget(QWidget *parent = 0);
     virtual ~TabWidget();
 
 protected:
@@ -28,7 +28,6 @@ protected:
 	void keyReleaseEvent(QKeyEvent *event) override;
 
 private slots:
-	void onTabBarEmpty();
 	void onAddNewTab();
 
 private:

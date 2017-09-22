@@ -6,7 +6,6 @@
 Splitter* Splitter::mRoot = nullptr;
 
 Splitter::Splitter(QWidget *parent) : QSplitter(parent) {
-	QObject::connect(this, &Splitter::removeAllEmptySplitters, this, &Splitter::onRemoveAllEmptySplitters, Qt::QueuedConnection);
 }
 
 void Splitter::setAsRoot() {
@@ -70,6 +69,7 @@ void Splitter::removeIfEmpty(Splitter* splitter) {
 	} else if (isLonely) {
 		//in this case there is only one child splitter and no tabWidgets, so for this
 		//we want to delete this splitter and move children directly to parent object.
+        Q_ASSERT(splitter->parentWidget());
 		childSplitter->setParent(splitter->parentWidget());
 		splitter->deleteLater();
 	}
@@ -91,14 +91,7 @@ void Splitter::tabWidgetAboutToDelete(TabWidget* widget) {
 	if (!widget) {
 		return;
 	}
-	QList<TabWidget*> widgets = findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
-	QList<Splitter*> splitters = findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
-
-	if (widgets.count() + splitters.count() == 0) {
-		deleteLater();
-	}
-
-	emit removeAllEmptySplitters();
+    onRemoveAllEmptySplitters();
 }
 
 QString Splitter::indentation(int level) {

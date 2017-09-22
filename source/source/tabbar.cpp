@@ -3,6 +3,7 @@
 #include <QApplication>
 
 TabBar::TabBar(QWidget *parent) : QTabBar(parent) {
+    QObject::connect(this, &TabBar::tabCloseRequested, this, &TabBar::onCloseTab);
 }
 
 void TabBar::mousePressEvent(QMouseEvent* event) {
@@ -25,5 +26,9 @@ void TabBar::mouseMoveEvent(QMouseEvent* event) {
 void TabBar::tabRemoved(int index) {
 	if (count() == 0) {
 		emit hasNoTabs();
-	}
+    }
+}
+
+void TabBar::onCloseTab(int index) {
+    removeTab(index);
 }
