@@ -114,19 +114,29 @@ void TabWidget::dropEvent(QDropEvent *event) {
             //dropped on widget area
 			Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
             Q_ASSERT(targetSplitter);
+
+            int targetIndex = findTargetIndex(targetSplitter);
+            QList<int> targetSizes = targetSplitter->sizes();
+            targetSizes.insert(targetIndex, targetSizes.first());
+
 			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
 			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
 			bool createNewSplitter = vertical != dropVertically;
-			int targetIndex = findTargetIndex(targetSplitter);
+            Splitter* newSplitter = nullptr;
+            TabWidget* newTabWidget = nullptr;
 
 			if (createNewSplitter) {
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
-                targetSplitter = targetSplitter->create(targetSplitter, targetIndex, orientation);
-                targetSplitter->insertWidget(0, this);
+                newSplitter = targetSplitter->create(targetSplitter, targetIndex, orientation);
+                newSplitter->insertWidget(0, this);
+                newTabWidget = new TabWidget(newSplitter);
+                newSplitter->setSizes(targetSizes);
+            } else {
+                newTabWidget = new TabWidget(targetSplitter);
             }
 
-            TabWidget* newTabWidget = new TabWidget(targetSplitter);
             newTabWidget->insertTab(0, sourceTab, tabTitle);
+            targetSplitter->setSizes(targetSizes);
         }
 
         event->acceptProposedAction();
