@@ -17,10 +17,15 @@ MainWindow::MainWindow(QWidget *parent) :
 	QApplication::setEffectEnabled(Qt::UI_FadeTooltip, false);
 	QApplication::setEffectEnabled(Qt::UI_AnimateToolBox, false);
 	QApplication::setAttribute(Qt::AA_CompressHighFrequencyEvents);
+
+    //setting style for debuggin purposes
 	QApplication::setStyle(QStyleFactory::create("fusion"));
+    static QString tab("QTabBar::tab:selected {"
+                            "color: #000000;"
+                       "}");
+    setStyleSheet(tab);
 
 	QApplication::setStartDragDistance(20);
-
     ui->setupUi(this);
 	setAnimated(false);
 	createWidgets();
@@ -33,14 +38,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::createWidgets() {
 	Splitter* splitter = new Splitter(this);
-	splitter->setAsRoot();
-	
+    setCentralWidget(splitter);
+
+    //giving splitter as parent will automatically append tabWidget to the splitter.
     TabWidget* tabWidget = new TabWidget(splitter);
 
-	tabWidget->addTab(new QWidget(tabWidget), "blaa1");
+    //for debugging
+    tabWidget->addTab(new QWidget(tabWidget), "blaa1");
 	tabWidget->addTab(new QWidget(tabWidget), "blaa2");
 	tabWidget->addTab(new QWidget(tabWidget), "blaa3");
-	splitter->addWidget(tabWidget);
-
-	setCentralWidget(splitter);
 }

@@ -6,6 +6,9 @@
 Splitter* Splitter::mRoot = nullptr;
 
 Splitter::Splitter(QWidget *parent) : QSplitter(parent) {
+    if (!mRoot) {
+        setAsRoot();
+    }
 }
 
 void Splitter::setAsRoot() {

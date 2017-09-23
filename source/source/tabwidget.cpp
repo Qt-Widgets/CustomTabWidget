@@ -27,6 +27,7 @@ TabWidget::TabWidget(QWidget *parent)
     setAcceptDrops(true);
     setTabsClosable(true);
 
+    //setting style for debugging purposes
 	static QString style("QPushButton {"
 		"   background-color: #757575;"
 		"   padding-left: 4px;"
@@ -110,6 +111,8 @@ void TabWidget::dropEvent(QDropEvent *event) {
             QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
             int targetIndex = tabBar()->tabAt(mousePos);
             insertTab(targetIndex, sourceTab, tabTitle);
+            targetIndex = (targetIndex == -1) ? tabBar()->count() -1 : targetIndex;
+            setCurrentIndex(targetIndex);
         } else {
             //dropped on widget area
 			Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
@@ -228,8 +231,22 @@ void TabWidget::updateIndicatorRect() {
         case utils::DropArea::TABBAR: {
             QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
             int index = tabBar()->tabAt(mousePos);
-            rect = tabBar()->tabRect(index);
-            rect.setRight(rect.left());
+            bool tabsUnderMouse = index != -1;
+
+            if (tabsUnderMouse) {
+                rect = tabBar()->tabRect(index);
+                rect.setRight(rect.left());
+            } else {
+                bool hasTabs = tabBar()->count() > 0;
+                if (hasTabs) {
+                    index = tabBar()->count() - 1;
+                    rect = tabBar()->tabRect(index);
+                    rect.setLeft(rect.right());
+                } else {
+                    rect = tabBar()->rect();
+                }
+            }
+
             break;
         }
         case utils::DropArea::INVALID:
