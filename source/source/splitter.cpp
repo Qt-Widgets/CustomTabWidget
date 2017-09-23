@@ -94,6 +94,23 @@ void Splitter::tabWidgetAboutToDelete(TabWidget* widget) {
     onRemoveAllEmptySplitters();
 }
 
+Splitter *Splitter::create(Splitter *parent, int toIndex, Qt::Orientation orientation) {
+    QList<TabWidget*> widgets = parent->findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
+    QList<Splitter*> splitters = parent->findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
+
+    Splitter* newSplitter = nullptr;
+    if (widgets.count() + splitters.count() >= 1) {
+        newSplitter = new Splitter(parent);
+        parent->insertWidget(toIndex, newSplitter);
+    } else {
+        //no need to create a new one, just change the orientation of the parent.
+        newSplitter = parent;
+    }
+
+    newSplitter->setOrientation(orientation);
+    return newSplitter;
+}
+
 QString Splitter::indentation(int level) {
 	QString value = QString();
 	for (int i = 0; i < level; i++) {
@@ -127,7 +144,7 @@ QString Splitter::splitterBranch(Splitter* splitter, int level) {
 	return text;
 }
 
-QString Splitter::printSplitterTree(Splitter* splitter /*= nullptr*/) {
+QString Splitter::printSplitterTree() {
 	QString text = QString("root\n");
 	text.append(splitterBranch(mRoot, 1));
 	return text;

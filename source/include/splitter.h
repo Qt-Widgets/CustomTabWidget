@@ -14,11 +14,12 @@ public:
 	void removeIfEmpty(Splitter* splitter);
 	void onRemoveAllEmptySplitters();
 	void tabWidgetAboutToDelete(TabWidget* widget);
+    Splitter* create(Splitter* parent, int toIndex, Qt::Orientation orientation);
 
 	//for debuggin
 	QString indentation(int level);
 	QString splitterBranch(Splitter* splitter = nullptr, int level = 0);
-	QString printSplitterTree(Splitter* splitter = nullptr);
+    QString printSplitterTree();
 
 signals:
 	void removeAllEmptySplitters();

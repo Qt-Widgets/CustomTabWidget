@@ -23,12 +23,9 @@ void TabBar::mouseMoveEvent(QMouseEvent* event) {
 	emit mouseDragged(mDragIndex, count());
 }
 
-void TabBar::tabRemoved(int index) {
-	if (count() == 0) {
-		emit hasNoTabs();
-    }
-}
-
 void TabBar::onCloseTab(int index) {
     removeTab(index);
+    if (count() == 0) {
+        emit hasNoTabs();
+    }
 }

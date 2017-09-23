@@ -41,6 +41,7 @@ TabWidget::TabWidget(QWidget *parent)
 	setCornerWidget(mMenuButton);
 	QObject::connect(mMenuButton, &QPushButton::clicked, this, &TabWidget::onAddNewTab);
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
+    QObject::connect(mTabBar, &TabBar::hasNoTabs, this, &TabWidget::onHasNoTabs);
 }
 
 TabWidget::~TabWidget() {
@@ -118,38 +119,14 @@ void TabWidget::dropEvent(QDropEvent *event) {
 			bool createNewSplitter = vertical != dropVertically;
 			int targetIndex = findTargetIndex(targetSplitter);
 
-			QList<TabWidget*> widgets = targetSplitter->root()->findChildren<TabWidget*>();
-			QList<Splitter*> splitters = targetSplitter->root()->findChildren<Splitter*>();
-			splitters.append(targetSplitter->root());
-
 			if (createNewSplitter) {
-                //create splitter
-				QList<TabWidget*> widgets = targetSplitter->findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
-				QList<Splitter*> splitters = targetSplitter->findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
-
-				Splitter* newSplitter = nullptr;
-				if (widgets.count() + splitters.count() >= 1) {
-					newSplitter = new Splitter(targetSplitter);
-					targetSplitter->insertWidget(targetIndex, newSplitter);
-					newSplitter->insertWidget(0, this);
-				} else {
-					//no need to create a new one, just change the orientation of the targetSplitter.
-					newSplitter = targetSplitter;
-				}
-
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
-                newSplitter->setOrientation(orientation);
-
-                //create tabWidget
-                TabWidget* newTabWidget = new TabWidget(newSplitter);
-                //newSplitter->insertWidget(0, newTabWidget);
-                newTabWidget->insertTab(0, sourceTab, tabTitle);
-			} else {
-                //create tabWidget
-                TabWidget* newTabWidget = new TabWidget(targetSplitter);
-                //targetSplitter->insertWidget(targetIndex, newTabWidget);
-                newTabWidget->insertTab(0, sourceTab, tabTitle);
+                targetSplitter = targetSplitter->create(targetSplitter, targetIndex, orientation);
+                targetSplitter->insertWidget(0, this);
             }
+
+            TabWidget* newTabWidget = new TabWidget(targetSplitter);
+            newTabWidget->insertTab(0, sourceTab, tabTitle);
         }
 
         event->acceptProposedAction();
@@ -177,18 +154,21 @@ void TabWidget::keyReleaseEvent(QKeyEvent *event) {
 		Splitter* splitter = dynamic_cast<Splitter*>(parentWidget());
 		Q_ASSERT(splitter);
 		qDebug() << " ";
-		qDebug().noquote() << splitter->printSplitterTree(splitter->root());
+        qDebug().noquote() << splitter->printSplitterTree();
 		qDebug() << " ";
 	}
 }
 
 void TabWidget::onAddNewTab() {
-	addTab(new QWidget(this), "blaaNew");
+    addTab(new QWidget(this), "blaaNew");
+}
+
+void TabWidget::onHasNoTabs() {
+    deleteLater();
 }
 
 void TabWidget::updateIndicatorArea(QPoint& p) {
     //calculate what area the mouse cursor is in.
-    int left = rect().left();
     int top = rect().top();
     int width = rect().width();
     int height = rect().height();
@@ -250,7 +230,7 @@ void TabWidget::updateIndicatorRect() {
     }
 }
 
-void TabWidget::tabDragged(int index, int tabCount) {
+void TabWidget::tabDragged(int index) {
 	if (index == -1) {
 		return;
 	}
@@ -268,7 +248,7 @@ void TabWidget::tabDragged(int index, int tabCount) {
     QPixmap pixmap(tabRect.size() * dpr);
     pixmap.fill(Qt::transparent);
     pixmap.setDevicePixelRatio(dpr);
-    drawDropWindow(pixmap, tabRect, tabText(index));
+    drawDragPixmap(pixmap, tabRect, tabText(index));
 
 //	QPixmap pixmap(tabBar()->tabRect(index).size() * dpr);
 //	pixmap.setDevicePixelRatio(dpr);
@@ -279,7 +259,7 @@ void TabWidget::tabDragged(int index, int tabCount) {
 	drag->setPixmap(pixmap);
 
     {
-        Qt::DropAction dropAction = drag->exec(Qt::MoveAction);
+        drag->exec(Qt::MoveAction);
     }
 
     //clear widgets and splitters after drag finished.
@@ -288,7 +268,7 @@ void TabWidget::tabDragged(int index, int tabCount) {
     }
 }
 
-void TabWidget::drawDropWindow(QPixmap &pixmap, QRect tabRect, QString text) {
+void TabWidget::drawDragPixmap(QPixmap &pixmap, QRect tabRect, QString text) {
     QPen pen;
     pen.setColor(QColor(Qt::black));
     pen.setWidth(3);

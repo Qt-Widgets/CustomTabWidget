@@ -29,13 +29,14 @@ protected:
 
 private slots:
 	void onAddNewTab();
+    void onHasNoTabs();
 
 private:
     void updateIndicatorRect();
     void updateIndicatorArea(QPoint& p);
-	void tabDragged(int index, int tabCount);
+    void tabDragged(int index);
     int findTargetIndex(const Splitter* targetSplitter);
-    void drawDropWindow(QPixmap &pixmap, QRect tabRect, QString text);
+    void drawDragPixmap(QPixmap &pixmap, QRect tabRect, QString text);
 
 private:
     const int mIndicatorMargin = 10;
