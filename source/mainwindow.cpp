@@ -6,6 +6,9 @@
 #include "include/splitter.h"
 #include "include/tabwidget.h"
 
+//for debugging
+#include "test_forms/testinspector.h"
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -47,4 +50,6 @@ void MainWindow::createWidgets() {
     tabWidget->addTab(new QWidget(tabWidget), "blaa1");
 	tabWidget->addTab(new QWidget(tabWidget), "blaa2");
 	tabWidget->addTab(new QWidget(tabWidget), "blaa3");
+
+    tabWidget->addTab(new TestInspector(tabWidget), "Inspector");
 }

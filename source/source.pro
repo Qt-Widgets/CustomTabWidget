@@ -17,13 +17,16 @@ HEADERS  += mainwindow.h \
         include/splitter.h \
         include/tabwidget.h \
         include/tabbar.h \
-        utils.h
+        utils.h \
+    test_forms/testinspector.h
 
 SOURCES += main.cpp\
         mainwindow.cpp \
         source/splitter.cpp \
         source/drawoverlay.cpp \
         source/tabbar.cpp \
-        source/tabwidget.cpp
+        source/tabwidget.cpp \
+    test_forms/testinspector.cpp
 
 FORMS    += mainwindow.ui \
+    test_forms/test_inspector.ui
