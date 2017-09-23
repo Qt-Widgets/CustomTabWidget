@@ -105,6 +105,13 @@ void TabWidget::dropEvent(QDropEvent *event) {
 		Q_ASSERT(sourceTabWidget);
         QWidget* sourceTab = sourceTabWidget->widget(sourceIndex);
 		Q_ASSERT(sourceTab);
+
+        if (sourceTabWidget == this && sourceTabWidget->count() == 1) {
+            event->acceptProposedAction();
+            event->accept();
+            mDrawOverlay->setRect(QRect());
+            return;
+        }
 		
         if (mIndicatorArea == utils::DropArea::TABBAR) {
             //dropped on tabbar
@@ -133,13 +140,15 @@ void TabWidget::dropEvent(QDropEvent *event) {
                 newSplitter = targetSplitter->create(targetSplitter, targetIndex, orientation);
                 newSplitter->insertWidget(0, this);
                 newTabWidget = new TabWidget(newSplitter);
+                newSplitter->insertWidget(targetIndex, newTabWidget);
                 newSplitter->setSizes(targetSizes);
             } else {
                 newTabWidget = new TabWidget(targetSplitter);
+                targetSplitter->insertWidget(targetIndex, newTabWidget);
+                targetSplitter->setSizes(targetSizes);
             }
 
             newTabWidget->insertTab(0, sourceTab, tabTitle);
-            targetSplitter->setSizes(targetSizes);
         }
 
         event->acceptProposedAction();
