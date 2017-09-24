@@ -7,7 +7,7 @@ TabBar::TabBar(QWidget *parent) : QTabBar(parent) {
 }
 
 void TabBar::mousePressEvent(QMouseEvent* event) {
-	QTabBar::mousePressEvent(event);
+    //QTabBar::mousePressEvent(event);
 	mDragStartPosition = event->pos();
 	mDragIndex = tabAt(event->pos());
 }
@@ -20,7 +20,12 @@ void TabBar::mouseMoveEvent(QMouseEvent* event) {
 		return;
 	}
 
-	emit mouseDragged(mDragIndex, count());
+    emit mouseDragged(mDragIndex, count());
+}
+
+void TabBar::mouseReleaseEvent(QMouseEvent *event) {
+    int index = tabAt(event->pos());
+    setCurrentIndex(index);
 }
 
 void TabBar::onCloseTab(int index) {

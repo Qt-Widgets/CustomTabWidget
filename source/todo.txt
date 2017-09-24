@@ -1,0 +1,79 @@
+TabWidget
+
+Next:
+	- When moving widgets around, splitter sizes should be remembered.
+	- Ability to drop to edges of the screen.
+	
+Low Priority:
+	- Floating window.
+	- Save layout.
+	- Improve visualisation. Make it even more clear where the dragged widget will end up.
+
+
+
+
+
+
+//source
+	dragging Last Tab
+		-remove index
+	source Tabs Remain
+//target
+	drop To Tabbar
+	drop on Index
+		-insert to existing splitter
+		-split index to two pieces
+
+
+
+bool createNewSplitter
+
+//case of source splitter
+//NOTE!!!!! You also need to do this when dropping on tabbar.
+if (!internalDrop) {
+	if (removedIndex != -1) {
+		//dragging last tab
+		int removedSize = sourceSplitter.sizes().at(removedIndex);
+		sourceSplitter.sizes.remove(removedIndex);
+	} else {
+		//tabs still remain in the sourceSplitter, so nothing was removed.
+	}
+
+	if (createNewSplitter) {
+		//no need for size change for targetSplitter
+	} else {
+		//inserting to targetSplitter
+		//NOTE!!!! removedSize might not be correct if it's in the wrong orientation.
+		targetSplitter.sizes().insert(targetIndex, removedSize);
+	}
+}
+
+
+
+//case of target splitter
+if (internalDrop) {
+	if (removedIndex != -1) {
+		if (createNewSplitter) {
+			targetSplitter.sizes().remove(removedIndex);
+		} else {
+			//widget only moved internally
+			targetSplitter.sizes().move(removedIndex, targetIndex);
+		}
+	} else {
+		//tabs still remain in the sourceSplitter
+
+		if (createNewSplitter) {
+			//no need for size changes
+		} else {
+			//insert to target splitter, with min size.
+			targetSplitter.sizes().insert(targetIndex, minimumSizeHint.size().height());
+		}
+	}
+}
+} 
+
+
+if (createNewSplitter) {
+	//case of new splitter
+	newSplitter.sizes = { halfSize, halfSize };
+}

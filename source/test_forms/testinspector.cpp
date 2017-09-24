@@ -1,7 +1,7 @@
 #include "testinspector.h"
 #include "ui_test_inspector.h"
 
-TestInspector::TestInspector(QWidget* parent) {
+TestInspector::TestInspector(QWidget* parent) : QWidget(parent) {
     mUi = new Ui::Inspector();
     mUi->setupUi(this);
 }

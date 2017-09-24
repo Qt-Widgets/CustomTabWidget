@@ -9,8 +9,8 @@ class Inspector;
 class TestInspector : public QWidget
 {
 public:
-    TestInspector(QWidget* parent = 0);
-    ~TestInspector();
+    explicit TestInspector(QWidget* parent = 0);
+    virtual ~TestInspector();
 
 private:
     Ui::Inspector* mUi;

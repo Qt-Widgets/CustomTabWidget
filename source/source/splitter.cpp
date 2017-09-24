@@ -1,6 +1,8 @@
 #include "include/splitter.h"
 #include "include/tabwidget.h"
 #include "utils.h"
+#include "mainwindow.h"
+
 #include <qDebug>
 
 Splitter* Splitter::mRoot = nullptr;
@@ -11,9 +13,11 @@ Splitter::Splitter(QWidget *parent) : QSplitter(parent) {
     }
 }
 
-void Splitter::setAsRoot() {
-	Q_ASSERT(!mRoot); //todo: handle case where you want to set a new root splitter.
+Splitter::~Splitter() {
 
+}
+
+void Splitter::setAsRoot() {
 	mRoot = this;
 }
 
@@ -38,55 +42,82 @@ Splitter* Splitter::root() {
     return mRoot;
 }
 
-void Splitter::removeIfEmpty(Splitter* splitter) {
-	if (splitter == mRoot) {
-		return;
-	}
+void Splitter::cleanSplitter(Splitter* splitter) {
 	bool hasTabWidgets = false;
-	bool hasSplitters = false;
-	int splitterCount = 0;
-	Splitter* childSplitter = nullptr;
+    bool hasSplitters = false;
+    QList<QWidget*> childWidgets;
+    Splitter* parentSplitter = dynamic_cast<Splitter*>(splitter->parentWidget());
 
 	for (auto child : splitter->children()) {
 		TabWidget* tabWidget = dynamic_cast<TabWidget*>(child);
 		hasTabWidgets |= tabWidget != nullptr;
-		
+
 		Splitter* splitter = dynamic_cast<Splitter*>(child);
 		hasSplitters |= splitter != nullptr;
 
-		if (splitter) {
-			if (splitterCount == 0) {
-				childSplitter = splitter;
-			} else {
-				childSplitter = nullptr;
-			}
-			splitterCount++;
-		}
+        if (tabWidget) {
+            childWidgets.append(tabWidget);
+        } else if (splitter) {
+            childWidgets.append(splitter);
+        }
 	}
 	
-	bool isEmpty = !hasSplitters && !hasTabWidgets;
-	bool isLonely = childSplitter && !hasTabWidgets;
+    bool isEmpty = !hasSplitters && !hasTabWidgets;
+    bool isLonely = childWidgets.count() < 2;
+    bool sameOrientation = parentSplitter && (parentSplitter->orientation() == splitter->orientation());
 
-	if (isEmpty) {
+    if (isEmpty && splitter != mRoot) {
 		splitter->deleteLater();
-	} else if (isLonely) {
-		//in this case there is only one child splitter and no tabWidgets, so for this
-		//we want to delete this splitter and move children directly to parent object.
+    } else if (isLonely) {
+        //in this case there is only one child, so for this we want to
+        //delete this splitter and move the child directly to parent object.
         Q_ASSERT(splitter->parentWidget());
-		childSplitter->setParent(splitter->parentWidget());
-		splitter->deleteLater();
-	}
+        Q_ASSERT(childWidgets.first());
+
+        if (childWidgets.count() == 1) {
+            //move child to parent.
+            if (parentSplitter) {
+                int index = parentSplitter->indexOf(splitter);
+                parentSplitter->insertWidget(index, childWidgets.first());
+            }
+
+            Splitter* childSplitter = dynamic_cast<Splitter*>(childWidgets.first());
+            if (splitter == mRoot && childSplitter) {
+                MainWindow* parentWidget = dynamic_cast<MainWindow*>(mRoot->parentWidget());
+                childSplitter->setParent(parentWidget);
+                parentWidget->setCentralWidget(childSplitter);
+                childSplitter->setAsRoot();
+            }
+        }
+
+        if (splitter != mRoot) {
+            splitter->deleteLater();
+        }
+    } else if (sameOrientation && childWidgets.count() != 0) {
+        //splitter has the same orientation as the parent, so we can just move
+        //children to the parent, and delete the splitter.
+        int index = parentSplitter->indexOf(splitter);
+        int i = 0;
+        for (auto child : childWidgets) {
+            parentSplitter->insertWidget(index + i, child);
+            i++;
+        }
+
+        if (splitter != mRoot) {
+            splitter->deleteLater();
+        }
+    }
 }
 
-void Splitter::onRemoveAllEmptySplitters() {
+void Splitter::cleanupSplitterTree() {
 	if (!mRoot) {
 		return;
 	}
 
 	QList<Splitter*> splitters = mRoot->findChildren<Splitter*>();
-	//splitters.append(mRoot);
+    splitters.append(mRoot);
 	for (auto splitter : splitters) {
-		removeIfEmpty(splitter);
+        cleanSplitter(splitter);
 	}
 }
 
@@ -94,24 +125,50 @@ void Splitter::tabWidgetAboutToDelete(TabWidget* widget) {
 	if (!widget) {
 		return;
 	}
-    onRemoveAllEmptySplitters();
+    cleanupSplitterTree();
 }
 
-Splitter *Splitter::create(Splitter *parent, int toIndex, Qt::Orientation orientation) {
-    QList<TabWidget*> widgets = parent->findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
-    QList<Splitter*> splitters = parent->findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
+Splitter *Splitter::insertChildSplitter(int toIndex, Qt::Orientation orientation) {
+    QList<TabWidget*> widgets = findChildren<TabWidget*>(QString(), Qt::FindDirectChildrenOnly);
+    QList<Splitter*> splitters = findChildren<Splitter*>(QString(), Qt::FindDirectChildrenOnly);
 
     Splitter* newSplitter = nullptr;
     if (widgets.count() + splitters.count() >= 1) {
-        newSplitter = new Splitter(parent);
-        parent->insertWidget(toIndex, newSplitter);
+        newSplitter = new Splitter();
+        insertWidget(toIndex, newSplitter);
     } else {
         //no need to create a new one, just change the orientation of the parent.
-        newSplitter = parent;
+        newSplitter = this;
     }
 
     newSplitter->setOrientation(orientation);
     return newSplitter;
+}
+
+QList<int> Splitter::splitIndexSizes(int insertSize, int index, int targetIndex, QList<int> sizes, bool onlyMove, int sourceIndex) {
+    if (sizes.isEmpty()) {
+        return sizes;
+    }
+
+    int availableSpace = sizes[index];
+    int splitSize = insertSize;
+
+    if (availableSpace / 2 < insertSize || insertSize == 0) {
+        //split in half when not enough space to do otherwise
+        splitSize = availableSpace / 2;
+        sizes[index] = splitSize;
+    } else {
+        sizes[index] = availableSpace - insertSize;
+    }
+
+    if (onlyMove && index == targetIndex) {
+        sizes.move(sourceIndex, targetIndex);
+        //sizes[targetIndex] = splitSize;
+    } else {
+        sizes.insert(targetIndex, splitSize);
+    }
+
+    return sizes;
 }
 
 QString Splitter::indentation(int level) {
@@ -150,5 +207,5 @@ QString Splitter::splitterBranch(Splitter* splitter, int level) {
 QString Splitter::printSplitterTree() {
 	QString text = QString("root\n");
 	text.append(splitterBranch(mRoot, 1));
-	return text;
+    return text;
 }

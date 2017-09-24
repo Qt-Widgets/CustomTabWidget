@@ -14,6 +14,7 @@
 
 #include "include/tabwidget.h"
 #include "include/tabbar.h"
+#include "include/splitter.h"
 
 static QString sourceIndexMimeDataKey() { return QStringLiteral("source/index"); }
 static QString sourceTabTitleMimeDataKey() { return QStringLiteral("source/tabtitle"); }
@@ -103,6 +104,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
         QString tabTitle = QString::fromStdString(mime->data(sourceTabTitleMimeDataKey()).toStdString());
         TabWidget* sourceTabWidget = static_cast<TabWidget*>(event->source());
 		Q_ASSERT(sourceTabWidget);
+        bool sourceHasOnlyOneTab = sourceTabWidget->tabBar()->count() == 1;
         QWidget* sourceTab = sourceTabWidget->widget(sourceIndex);
 		Q_ASSERT(sourceTab);
 
@@ -122,14 +124,18 @@ void TabWidget::dropEvent(QDropEvent *event) {
             setCurrentIndex(targetIndex);
         } else {
             //dropped on widget area
-			Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
+            Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
             Q_ASSERT(targetSplitter);
 
+            Splitter* sourceSplitter = dynamic_cast<Splitter*>(sourceTabWidget->parentWidget());
+            Q_ASSERT(sourceSplitter);
+
             int targetIndex = findTargetIndex(targetSplitter);
+            int thisIndex = targetSplitter->indexOf(this);
             QList<int> targetSizes = targetSplitter->sizes();
-            targetSizes.insert(targetIndex, targetSizes.first());
 
 			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
+            int targetSplitterSize = vertical ? targetSplitter->size().height() : targetSplitter->size().width();
 			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
 			bool createNewSplitter = vertical != dropVertically;
             Splitter* newSplitter = nullptr;
@@ -137,18 +143,28 @@ void TabWidget::dropEvent(QDropEvent *event) {
 
 			if (createNewSplitter) {
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
-                newSplitter = targetSplitter->create(targetSplitter, targetIndex, orientation);
+                newSplitter = targetSplitter->insertChildSplitter(thisIndex, orientation);
                 newSplitter->insertWidget(0, this);
                 newTabWidget = new TabWidget(newSplitter);
+                newTabWidget->insertTab(0, sourceTab, tabTitle);
                 newSplitter->insertWidget(targetIndex, newTabWidget);
-                newSplitter->setSizes(targetSizes);
+
+                QList<int> newSizes = { int(targetSplitterSize / 2), int(targetSplitterSize / 2) };
+                newSplitter->setSizes(newSizes);
+
+                //int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
+                //targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, targetIndex, targetSizes, false, sourceIndex);
+                //targetSplitter->setSizes(targetSizes);
             } else {
                 newTabWidget = new TabWidget(targetSplitter);
                 targetSplitter->insertWidget(targetIndex, newTabWidget);
+                newTabWidget->insertTab(0, sourceTab, tabTitle);
+
+                int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
+                bool onlyMove = sourceSplitter == targetSplitter && sourceHasOnlyOneTab;
+                targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, targetIndex, targetSizes, onlyMove, sourceIndex);
                 targetSplitter->setSizes(targetSizes);
             }
-
-            newTabWidget->insertTab(0, sourceTab, tabTitle);
         }
 
         event->acceptProposedAction();
@@ -178,7 +194,9 @@ void TabWidget::keyReleaseEvent(QKeyEvent *event) {
 		qDebug() << " ";
         qDebug().noquote() << splitter->printSplitterTree();
 		qDebug() << " ";
+        //event->accept();
 	}
+    QTabWidget::keyReleaseEvent(event);
 }
 
 void TabWidget::onAddNewTab() {
@@ -289,19 +307,20 @@ void TabWidget::tabDragged(int index) {
 //	QPixmap pixmap(tabBar()->tabRect(index).size() * dpr);
 //	pixmap.setDevicePixelRatio(dpr);
 //	render(&pixmap);
-	
-	QDrag* drag = new QDrag(this);
-	drag->setMimeData(mimeData);
-	drag->setPixmap(pixmap);
 
-    {
-        drag->exec(Qt::MoveAction);
-    }
+    QDrag* drag = new QDrag(this);
+    drag->setMimeData(mimeData);
+    drag->setPixmap(pixmap);
+    drag->exec(Qt::MoveAction);
 
-    //clear widgets and splitters after drag finished.
+    //clear widget after drag finished.
     if (tabBar()->count() == 0) {
         deleteLater();
     }
+
+    //could not find any other way for doing this, but use invokeMethod, the problem is that
+    //the cleanupSplitterTree must be called after all deleteLater events has been processed.
+    QMetaObject::invokeMethod(parentWidget(), "cleanupSplitterTree", Qt::QueuedConnection);
 }
 
 void TabWidget::drawDragPixmap(QPixmap &pixmap, QRect tabRect, QString text) {
