@@ -93,19 +93,21 @@ void TabWidget::dragLeaveEvent(QDragLeaveEvent* event) {
 void TabWidget::dropEvent(QDropEvent *event) {
     const QMimeData *mime = event->mimeData();
     if (mime->hasText()) {
-        if (mIndicatorArea == utils::DropArea::INVALID) {
+        if (mIndicatorArea == DropArea::INVALID) {
             qDebug() << "ERROR: drop area was invalid.";
             mDrawOverlay->setRect(QRect());
             event->ignore();
             return;
         }
 
-        int sourceIndex = mime->data(sourceIndexMimeDataKey()).toInt();
+        Splitter::RestoreSizeProperties sizeProperties;
+
+        sizeProperties.sourceIndex = mime->data(sourceIndexMimeDataKey()).toInt();
         QString tabTitle = QString::fromStdString(mime->data(sourceTabTitleMimeDataKey()).toStdString());
         TabWidget* sourceTabWidget = static_cast<TabWidget*>(event->source());
 		Q_ASSERT(sourceTabWidget);
-        bool sourceHasOnlyOneTab = sourceTabWidget->tabBar()->count() == 1;
-        QWidget* sourceTab = sourceTabWidget->widget(sourceIndex);
+        sizeProperties.sourceHasOnlyOneTab = sourceTabWidget->tabBar()->count() == 1;
+        QWidget* sourceTab = sourceTabWidget->widget(sizeProperties.sourceIndex);
 		Q_ASSERT(sourceTab);
 
         if (sourceTabWidget == this && sourceTabWidget->count() == 1) {
@@ -115,7 +117,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
             return;
         }
 		
-        if (mIndicatorArea == utils::DropArea::TABBAR) {
+        if (mIndicatorArea == DropArea::TABBAR) {
             //dropped on tabbar
             QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
             int targetIndex = tabBar()->tabAt(mousePos);
@@ -130,40 +132,34 @@ void TabWidget::dropEvent(QDropEvent *event) {
             Splitter* sourceSplitter = dynamic_cast<Splitter*>(sourceTabWidget->parentWidget());
             Q_ASSERT(sourceSplitter);
 
-            int targetIndex = findTargetIndex(targetSplitter);
-            int thisIndex = targetSplitter->indexOf(this);
-            QList<int> targetSizes = targetSplitter->sizes();
+            sizeProperties.targetIndex = findTargetIndex(targetSplitter);
+            sizeProperties.thisIndex = targetSplitter->indexOf(this);
+            sizeProperties.targetSizes = targetSplitter->sizes();
 
 			bool vertical = (targetSplitter->orientation() == Qt::Vertical);
-            int targetSplitterSize = vertical ? targetSplitter->size().height() : targetSplitter->size().width();
-			bool dropVertically = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::TOP);
+            sizeProperties.targetSplitterSize = vertical ? targetSplitter->size().height() : targetSplitter->size().width();
+            bool dropVertically = (mIndicatorArea == BOTTOM || mIndicatorArea == TOP);
 			bool createNewSplitter = vertical != dropVertically;
+
             Splitter* newSplitter = nullptr;
             TabWidget* newTabWidget = nullptr;
 
 			if (createNewSplitter) {
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
-                newSplitter = targetSplitter->insertChildSplitter(thisIndex, orientation);
+                newSplitter = targetSplitter->insertChildSplitter(sizeProperties.thisIndex, orientation);
                 newSplitter->insertWidget(0, this);
                 newTabWidget = new TabWidget(newSplitter);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
-                newSplitter->insertWidget(targetIndex, newTabWidget);
-
-                QList<int> newSizes = { int(targetSplitterSize / 2), int(targetSplitterSize / 2) };
-                newSplitter->setSizes(newSizes);
-
-                //int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
-                //targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, targetIndex, targetSizes, false, sourceIndex);
-                //targetSplitter->setSizes(targetSizes);
+                newSplitter->insertWidget(sizeProperties.targetIndex, newTabWidget);
+                newSplitter->restoreSizesAfterDrag(Splitter::newSplitter, sizeProperties);
             } else {
                 newTabWidget = new TabWidget(targetSplitter);
-                targetSplitter->insertWidget(targetIndex, newTabWidget);
+                targetSplitter->insertWidget(sizeProperties.targetIndex, newTabWidget);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
 
-                int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
-                bool onlyMove = sourceSplitter == targetSplitter && sourceHasOnlyOneTab;
-                targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, targetIndex, targetSizes, onlyMove, sourceIndex);
-                targetSplitter->setSizes(targetSizes);
+                sizeProperties.insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
+                sizeProperties.onlyMove = sourceSplitter == targetSplitter && sizeProperties.sourceHasOnlyOneTab;
+                targetSplitter->restoreSizesAfterDrag(Splitter::targetSplitter, sizeProperties);
             }
         }
 
@@ -175,7 +171,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
 
 int TabWidget::findTargetIndex(const Splitter* targetSplitter) {
     int targetIndex = targetSplitter->indexOf(this);
-    bool insertAfterTarget = (mIndicatorArea == utils::BOTTOM || mIndicatorArea == utils::RIGHT);
+    bool insertAfterTarget = (mIndicatorArea == BOTTOM || mIndicatorArea == RIGHT);
     return insertAfterTarget ? targetIndex + 1 : targetIndex;
 }
 
@@ -223,39 +219,39 @@ void TabWidget::updateIndicatorArea(QPoint& p) {
     bool leftArea = (marginX > p.x()) && !tabBarArea;
 
     if (topArea) {
-        mIndicatorArea = utils::DropArea::TOP;
+        mIndicatorArea = DropArea::TOP;
     } else if (bottomArea) {
-        mIndicatorArea = utils::DropArea::BOTTOM;
+        mIndicatorArea = DropArea::BOTTOM;
     } else if (rightArea) {
-        mIndicatorArea = utils::DropArea::RIGHT;
+        mIndicatorArea = DropArea::RIGHT;
     } else if (leftArea) {
-        mIndicatorArea = utils::DropArea::LEFT;
+        mIndicatorArea = DropArea::LEFT;
     } else if (tabBarArea) {
-        mIndicatorArea = utils::DropArea::TABBAR;
+        mIndicatorArea = DropArea::TABBAR;
     }
 }
 
 void TabWidget::updateIndicatorRect() {
-    if (mIndicatorArea != utils::DropArea::INVALID) {
+    if (mIndicatorArea != DropArea::INVALID) {
         QRect rect = this->rect();
         rect.setTop(tabBar()->rect().height());
         int marginY = rect.height() * 0.4;
         int marginX = rect.width() * 0.4;
 
         switch (mIndicatorArea) {
-        case utils::DropArea::TOP:
+        case DropArea::TOP:
             rect.setBottom(marginY);
             break;
-        case utils::DropArea::BOTTOM:
+        case DropArea::BOTTOM:
             rect.setTop(rect.bottom() - marginY);
             break;
-        case utils::DropArea::RIGHT:
+        case DropArea::RIGHT:
             rect.setLeft(rect.right() - marginX);
             break;
-        case utils::DropArea::LEFT:
+        case DropArea::LEFT:
             rect.setRight(rect.left() + marginX);
             break;
-        case utils::DropArea::TABBAR: {
+        case DropArea::TABBAR: {
             QPoint mousePos = tabBar()->mapFromGlobal(QCursor::pos());
             int index = tabBar()->tabAt(mousePos);
             bool tabsUnderMouse = index != -1;
@@ -276,7 +272,7 @@ void TabWidget::updateIndicatorRect() {
 
             break;
         }
-        case utils::DropArea::INVALID:
+        case DropArea::INVALID:
             break;
         }
 

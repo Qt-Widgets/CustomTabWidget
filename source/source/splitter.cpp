@@ -1,6 +1,5 @@
 #include "include/splitter.h"
 #include "include/tabwidget.h"
-#include "utils.h"
 #include "mainwindow.h"
 
 #include <qDebug>
@@ -208,4 +207,19 @@ QString Splitter::printSplitterTree() {
 	QString text = QString("root\n");
 	text.append(splitterBranch(mRoot, 1));
     return text;
+}
+
+void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, RestoreSizeProperties input) {
+    if (splitterType == sourceSplitter) {
+
+    } else if (splitterType == targetSplitter) {
+        input.targetSizes = splitIndexSizes(input.insertSize, input.thisIndex, input.targetIndex, input.targetSizes, input.onlyMove, input.sourceIndex);
+        setSizes(input.targetSizes);
+    } else if (splitterType == newSplitter) {
+        QList<int> newSizes = { int(input.targetSplitterSize / 2), int(input.targetSplitterSize / 2) };
+        setSizes(newSizes);
+        //int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
+        //targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, targetIndex, targetSizes, false, sourceIndex);
+        //targetSplitter->setSizes(targetSizes);
+    }
 }

@@ -3,7 +3,6 @@
 #include <QFrame>
 #include <QPushButton>
 
-#include "utils.h"
 #include "include/drawoverlay.h"
 #include "include/splitter.h"
 
@@ -16,6 +15,7 @@ class TabWidget : public QTabWidget
 public:
     explicit TabWidget(QWidget *parent = 0);
     virtual ~TabWidget();
+    enum DropArea { TABBAR, TOP, RIGHT, BOTTOM, LEFT, INVALID };
 
 protected:
     void dragMoveEvent(QDragMoveEvent* event) override;
@@ -40,7 +40,7 @@ private:
 
 private:
     const int mIndicatorMargin = 10;
-    utils::DropArea mIndicatorArea = utils::DropArea::INVALID;
+    DropArea mIndicatorArea = DropArea::INVALID;
     DrawOverlay* mDrawOverlay;
 	TabBar* mTabBar;
 	QPushButton* mMenuButton;

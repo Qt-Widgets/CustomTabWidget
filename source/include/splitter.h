@@ -22,6 +22,22 @@ public:
 	QString splitterBranch(Splitter* splitter = nullptr, int level = 0);
     QString printSplitterTree();
 
+    //SplitterType is used when restoring splitter handle sizes after a drop operation.
+    enum SplitterType { sourceSplitter, targetSplitter, newSplitter };
+    struct RestoreSizeProperties {
+        int insertSize;
+        int index;
+        int targetIndex;
+        QList<int> sizes;
+        QList<int> targetSizes;
+        bool onlyMove;
+        int sourceIndex;
+        int targetSplitterSize;
+        int thisIndex;
+        bool sourceHasOnlyOneTab;
+    };
+    void restoreSizesAfterDrag(SplitterType splitterType, RestoreSizeProperties input);
+
 public slots:
     void cleanupSplitterTree();
 

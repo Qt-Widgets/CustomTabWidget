@@ -17,7 +17,6 @@ HEADERS  += mainwindow.h \
         include/splitter.h \
         include/tabwidget.h \
         include/tabbar.h \
-        utils.h \
     test_forms/testinspector.h
 
 SOURCES += main.cpp\

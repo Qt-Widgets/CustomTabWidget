@@ -2,7 +2,6 @@
 #include <QTabBar>
 #include <QFrame>
 #include <QPushButton>
-#include <utils.h>
 
 #include "include/drawoverlay.h"
 
