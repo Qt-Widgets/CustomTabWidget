@@ -125,6 +125,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
         if (mIndicatorArea == DropArea::INVALID) {
             qDebug() << "ERROR: drop area was invalid.";
             mDrawOverlay->setRectHidden(true);
+            mDrawOverlay->setRect(QRect());
             event->ignore();
             return;
         }
@@ -147,6 +148,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
             event->acceptProposedAction();
             event->accept();
             mDrawOverlay->setRectHidden(true);
+            mDrawOverlay->setRect(QRect());
             return;
         }
 		
@@ -157,6 +159,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
             insertTab(targetIndex, sourceTab, tabTitle);
             targetIndex = (targetIndex == -1) ? tabBar()->count() -1 : targetIndex;
             setCurrentIndex(targetIndex);
+            sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
         } else {
             //dropped on widget area
             Splitter* newSplitter = nullptr;
@@ -174,6 +177,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
                 newTabWidget = new TabWidget(newSplitter);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
                 newSplitter->insertWidget(dropIndex, newTabWidget);
+                sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
                 newSplitter->restoreSizesAfterDrag(Splitter::newSplitter, p);
                 targetSplitter->setSizes(targetSize);
             } else {
@@ -181,15 +185,15 @@ void TabWidget::dropEvent(QDropEvent *event) {
                 targetSplitter->insertWidget(dropIndex, newTabWidget);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
                 p.insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
+                sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
                 targetSplitter->restoreSizesAfterDrag(Splitter::targetSplitter, p);
             }
         }
 
-        sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
-
         event->acceptProposedAction();
         event->accept();
         mDrawOverlay->setRectHidden(true);
+        mDrawOverlay->setRect(QRect());
     }
 }
 
@@ -237,7 +241,7 @@ void TabWidget::updateIndicatorArea(QPoint& p) {
 
     bool tabBarArea = (p.y() < tabBar()->rect().height());
 
-    bool topArea = (top + marginY > p.y()) && !tabBarArea;
+    bool topArea = (top + marginY + tabBar()->rect().height() > p.y()) && !tabBarArea;
     bool bottomArea = (height - marginY < p.y()) && !tabBarArea;
     bool rightArea = (marginX < p.x()) && !tabBarArea;
     bool leftArea = (marginX > p.x()) && !tabBarArea;
@@ -264,7 +268,7 @@ void TabWidget::updateIndicatorRect() {
 
         switch (mIndicatorArea) {
         case DropArea::TOP:
-            rect.setBottom(marginY);
+            rect.setBottom(tabBar()->rect().height() + marginY);
             break;
         case DropArea::BOTTOM:
             rect.setTop(rect.bottom() - marginY);

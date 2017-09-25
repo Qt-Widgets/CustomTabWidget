@@ -186,6 +186,7 @@ QString Splitter::printSplitterTree() {
 void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, DropProperties& p) {
     if (splitterType == sourceSplitter) {
         if (p.removeSourceWidget && !p.droppedOnSelf) {
+            p.sizeRemoved = *p.dragLocation;
             p.sourceSizes.removeOne(p.dragLocation);
             p.dragLocation = nullptr;
             setSizes(p.pointersToInt(p.sourceSizes).toList());
@@ -211,6 +212,10 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
         *p.dropLocation = p.insertSize;
     } else {
         *p.dropLocation = availableSpace - p.insertSize;
+    }
+
+    if (!p.droppedOnSelf) {
+        *p.dropLocation += p.sizeRemoved;
     }
 
     int dropIndex = p.targetSizes.indexOf(p.dropLocation);

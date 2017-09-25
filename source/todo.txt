@@ -3,7 +3,7 @@ TabWidget
 Next:
 	- Ability to drop to edges of the screen. 
 		* might be tough to do the visualisation, because now it's done in tabWidget, and you can't draw outside of the containing widget. This means that if we want to get the visualisation, we have to move drawing somewhere else. Maybe in the splitter? It would make sense for it to be there..
-		.. Oh, right.. does splitter even have a renderer?
+		.. Splitter is a QFrame so this should work, but there might be problems with it being drawn behind..
 	- Save layout.
 	
 Low Priority:
