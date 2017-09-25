@@ -6,7 +6,8 @@ class TabWidget;
 
 struct DropProperties {
     int insertSize = -1, targetSplitterSize = -1;
-    bool onlyMove = false, removeSourceWidget = false, createNewSplitter = false, droppedOnSelf = false, insertAfter = false;
+    bool onlyMove = false, removeSourceWidget = false, createNewSplitter = false;
+    bool droppedOnSelf = false, insertAfter = false, dropOnTabBar = false;
     std::shared_ptr<int> dragLocation = nullptr;
     std::shared_ptr<int> dropLocation = nullptr;
     //vector of pointers because we have to remember original drag and drop locations even after

@@ -184,18 +184,17 @@ QString Splitter::printSplitterTree() {
 }
 
 void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, DropProperties& p) {
-    if (splitterType == sourceSplitter && p.removeSourceWidget && !p.droppedOnSelf) {
-        p.sourceSizes.removeOne(p.dragLocation);
-        p.dragLocation = nullptr;
-        setSizes(p.pointersToInt(p.sourceSizes).toList());
+    if (splitterType == sourceSplitter) {
+        if (p.removeSourceWidget && !p.droppedOnSelf) {
+            p.sourceSizes.removeOne(p.dragLocation);
+            p.dragLocation = nullptr;
+            setSizes(p.pointersToInt(p.sourceSizes).toList());
+        }
     } else if (splitterType == targetSplitter) {
         setSizes(splitIndexSizes(p).toList());
     } else if (splitterType == newSplitter) {
         int halfSize = int(p.targetSplitterSize / 2);
         setSizes({ halfSize, halfSize });
-        //int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
-        //targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, dropToIndex, targetSizes, false, sourceIndex);
-        //targetSplitter->setSizes(targetSizes);
     }
 }
 

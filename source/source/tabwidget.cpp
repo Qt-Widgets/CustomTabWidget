@@ -108,7 +108,7 @@ DropProperties TabWidget::createDropProperties(TabWidget* sourceTabWidget,
     p.dropLocation = p.targetSizes.at(dropWidgetIndex);
 
     p.insertAfter = (mIndicatorArea == BOTTOM || mIndicatorArea == RIGHT);
-    //sizeProperties.dropToIndex = findTargetIndex(targetSplitter);
+    p.dropOnTabBar = mIndicatorArea == TABBAR;
     bool vertical = (targetSplitter->orientation() == Qt::Vertical);
     p.targetSplitterSize = vertical ? targetSplitter->size().height() : targetSplitter->size().width();
     bool dropVertically = (mIndicatorArea == BOTTOM || mIndicatorArea == TOP);
@@ -166,12 +166,14 @@ void TabWidget::dropEvent(QDropEvent *event) {
             if (p.createNewSplitter) {
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
                 int dropWidgetIndex = targetSplitter->indexOf(this);
+                QList<int> targetSize = targetSplitter->sizes();
                 newSplitter = targetSplitter->insertChildSplitter(dropWidgetIndex, orientation);
                 newSplitter->insertWidget(0, this);
                 newTabWidget = new TabWidget(newSplitter);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
                 newSplitter->insertWidget(dropIndex, newTabWidget);
                 newSplitter->restoreSizesAfterDrag(Splitter::newSplitter, p);
+                targetSplitter->setSizes(targetSize);
             } else {
                 newTabWidget = new TabWidget(targetSplitter);
                 targetSplitter->insertWidget(dropIndex, newTabWidget);
