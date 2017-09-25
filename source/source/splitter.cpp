@@ -184,12 +184,10 @@ QString Splitter::printSplitterTree() {
 }
 
 void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, DropProperties& p) {
-    if (splitterType == sourceSplitter) {
-        if (p.droppedOnSelf) {
-            //
-        } else {
-            //
-        }
+    if (splitterType == sourceSplitter && p.removeSourceWidget && !p.droppedOnSelf) {
+        p.sourceSizes.removeOne(p.dragLocation);
+        p.dragLocation = nullptr;
+        setSizes(p.pointersToInt(p.sourceSizes).toList());
     } else if (splitterType == targetSplitter) {
         setSizes(splitIndexSizes(p).toList());
     } else if (splitterType == newSplitter) {
@@ -216,16 +214,9 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
         *p.dropLocation = availableSpace - p.insertSize;
     }
 
-    int dragIndex = p.targetSizes.indexOf(p.dragLocation);
     int dropIndex = p.targetSizes.indexOf(p.dropLocation);
     dropIndex = p.insertAfter ? dropIndex + 1 : dropIndex;
-    bool onlyMove = p.droppedOnSelf && p.removeSourceWidget;
-    if (onlyMove) {
-        p.targetSizes.move(dragIndex, dropIndex);
-        //sizes[dropToIndex] = splitSize;
-    } else {
-        p.targetSizes.insert(dropIndex, std::make_shared<int>(p.insertSize));
-    }
+    p.targetSizes.insert(dropIndex, std::make_shared<int>(*p.dropLocation));
 
     return p.pointersToInt(p.targetSizes);
 }

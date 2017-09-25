@@ -160,18 +160,21 @@ void TabWidget::dropEvent(QDropEvent *event) {
             Splitter* newSplitter = nullptr;
             TabWidget* newTabWidget = nullptr;
             bool vertical = (targetSplitter->orientation() == Qt::Vertical);
+            int dropIndex = p.targetSizes.indexOf(p.dropLocation);
+            dropIndex = p.insertAfter ? dropIndex + 1 : dropIndex;
 
             if (p.createNewSplitter) {
                 Qt::Orientation orientation = vertical ? Qt::Horizontal : Qt::Vertical;
-                newSplitter = targetSplitter->insertChildSplitter(p.dropWidgetIndex, orientation);
+                int dropWidgetIndex = targetSplitter->indexOf(this);
+                newSplitter = targetSplitter->insertChildSplitter(dropWidgetIndex, orientation);
                 newSplitter->insertWidget(0, this);
                 newTabWidget = new TabWidget(newSplitter);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
-                newSplitter->insertWidget(p.dropToIndex, newTabWidget);
+                newSplitter->insertWidget(dropIndex, newTabWidget);
                 newSplitter->restoreSizesAfterDrag(Splitter::newSplitter, p);
             } else {
                 newTabWidget = new TabWidget(targetSplitter);
-                targetSplitter->insertWidget(p.dropToIndex, newTabWidget);
+                targetSplitter->insertWidget(dropIndex, newTabWidget);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
                 p.insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
                 targetSplitter->restoreSizesAfterDrag(Splitter::targetSplitter, p);

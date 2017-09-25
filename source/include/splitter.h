@@ -5,7 +5,7 @@
 class TabWidget;
 
 struct DropProperties {
-    int insertSize = -1, index = -1, dropToIndex = -1, sourceWidgetIndex = -1, targetSplitterSize = -1, dropWidgetIndex = -1;
+    int insertSize = -1, targetSplitterSize = -1;
     bool onlyMove = false, removeSourceWidget = false, createNewSplitter = false, droppedOnSelf = false, insertAfter = false;
     std::shared_ptr<int> dragLocation = nullptr;
     std::shared_ptr<int> dropLocation = nullptr;
