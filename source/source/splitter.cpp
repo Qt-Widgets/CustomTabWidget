@@ -224,38 +224,24 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
         p.targetSizes.move(dragIndex, dropIndex);
         //sizes[dropToIndex] = splitSize;
     } else {
-        p.targetSizes.insert(dropIndex, new int(p.insertSize));
+        p.targetSizes.insert(dropIndex, std::make_shared<int>(p.insertSize));
     }
 
     return p.pointersToInt(p.targetSizes);
 }
 
-DropProperties::~DropProperties() {
-    dragLocation = nullptr;
-    dropLocation = nullptr;
-    deleteIntPointers(sourceSizes);
-    deleteIntPointers(targetSizes);
-}
-
-QVector<int*> DropProperties::intToPointers(QVector<int> input) {
-    QVector<int*> result;
+QVector<std::shared_ptr<int> > DropProperties::intToPointers(QVector<int> input) {
+    QVector<std::shared_ptr<int>> result;
     for (int item : input) {
-        result.append(new int(item));
+        result.append(std::make_shared<int>(item));
     }
     return result;
 }
 
-QVector<int> DropProperties::pointersToInt(QVector<int *> input) {
+QVector<int> DropProperties::pointersToInt(QVector<std::shared_ptr<int>> input) {
     QVector<int> result;
-    for (int* item : input) {
+    for (auto item : input) {
         result.append(*item);
     }
     return result;
-}
-
-void DropProperties::deleteIntPointers(QVector<int *> input) {
-    for (int i = 0; i < input.size(); i++) {
-        delete input.at(i);
-    }
-    input.clear();
 }

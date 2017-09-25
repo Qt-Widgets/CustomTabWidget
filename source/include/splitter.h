@@ -7,14 +7,14 @@ class TabWidget;
 struct DropProperties {
     int insertSize = -1, index = -1, dropToIndex = -1, sourceWidgetIndex = -1, targetSplitterSize = -1, dropWidgetIndex = -1;
     bool onlyMove = false, removeSourceWidget = false, createNewSplitter = false, droppedOnSelf = false, insertAfter = false;
-    int* dragLocation = nullptr;
-    int* dropLocation = nullptr;
-    QVector<int*> sourceSizes, targetSizes; //yes pointers because we have to remember original drag and drop locations.
+    std::shared_ptr<int> dragLocation = nullptr;
+    std::shared_ptr<int> dropLocation = nullptr;
+    //vector of pointers because we have to remember original drag and drop locations even after
+    //items has been removed or inserted to the vector.
+    QVector<std::shared_ptr<int>> sourceSizes, targetSizes;
 
-    virtual ~DropProperties();
-    QVector<int*> intToPointers(QVector<int> input);
-    QVector<int> pointersToInt(QVector<int*> input);
-    void deleteIntPointers(QVector<int*> input);
+    QVector<std::shared_ptr<int>> intToPointers(QVector<int> input);
+    QVector<int> pointersToInt(QVector<std::shared_ptr<int> > input);
 };
 
 class Splitter : public QSplitter {
