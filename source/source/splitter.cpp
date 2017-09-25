@@ -144,32 +144,6 @@ Splitter *Splitter::insertChildSplitter(int toIndex, Qt::Orientation orientation
     return newSplitter;
 }
 
-QList<int> Splitter::splitIndexSizes(int insertSize, int index, int targetIndex, QList<int> sizes, bool onlyMove, int sourceIndex) {
-    if (sizes.isEmpty()) {
-        return sizes;
-    }
-
-    int availableSpace = sizes[index];
-    int splitSize = insertSize;
-
-    if (availableSpace / 2 < insertSize || insertSize == 0) {
-        //split in half when not enough space to do otherwise
-        splitSize = availableSpace / 2;
-        sizes[index] = splitSize;
-    } else {
-        sizes[index] = availableSpace - insertSize;
-    }
-
-    if (onlyMove && index == targetIndex) {
-        sizes.move(sourceIndex, targetIndex);
-        //sizes[targetIndex] = splitSize;
-    } else {
-        sizes.insert(targetIndex, splitSize);
-    }
-
-    return sizes;
-}
-
 QString Splitter::indentation(int level) {
 	QString value = QString();
 	for (int i = 0; i < level; i++) {
@@ -209,17 +183,79 @@ QString Splitter::printSplitterTree() {
     return text;
 }
 
-void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, RestoreSizeProperties input) {
+void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, DropProperties& p) {
     if (splitterType == sourceSplitter) {
-
+        if (p.droppedOnSelf) {
+            //
+        } else {
+            //
+        }
     } else if (splitterType == targetSplitter) {
-        input.targetSizes = splitIndexSizes(input.insertSize, input.thisIndex, input.targetIndex, input.targetSizes, input.onlyMove, input.sourceIndex);
-        setSizes(input.targetSizes);
+        setSizes(splitIndexSizes(p).toList());
     } else if (splitterType == newSplitter) {
-        QList<int> newSizes = { int(input.targetSplitterSize / 2), int(input.targetSplitterSize / 2) };
-        setSizes(newSizes);
+        int halfSize = int(p.targetSplitterSize / 2);
+        setSizes({ halfSize, halfSize });
         //int insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
-        //targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, targetIndex, targetSizes, false, sourceIndex);
+        //targetSizes = targetSplitter->splitIndexSizes(insertSize, thisIndex, dropToIndex, targetSizes, false, sourceIndex);
         //targetSplitter->setSizes(targetSizes);
     }
+}
+
+QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
+    if (p.targetSizes.isEmpty()) {
+        return {};
+    }
+
+    int availableSpace = *p.dropLocation;
+
+    if (availableSpace / 2 < p.insertSize || p.insertSize == 0) {
+        //split in half when not enough space to do otherwise
+        p.insertSize = availableSpace / 2;
+        *p.dropLocation = p.insertSize;
+    } else {
+        *p.dropLocation = availableSpace - p.insertSize;
+    }
+
+    int dragIndex = p.targetSizes.indexOf(p.dragLocation);
+    int dropIndex = p.targetSizes.indexOf(p.dropLocation);
+    dropIndex = p.insertAfter ? dropIndex + 1 : dropIndex;
+    bool onlyMove = p.droppedOnSelf && p.removeSourceWidget;
+    if (onlyMove) {
+        p.targetSizes.move(dragIndex, dropIndex);
+        //sizes[dropToIndex] = splitSize;
+    } else {
+        p.targetSizes.insert(dropIndex, new int(p.insertSize));
+    }
+
+    return p.pointersToInt(p.targetSizes);
+}
+
+DropProperties::~DropProperties() {
+    dragLocation = nullptr;
+    dropLocation = nullptr;
+    deleteIntPointers(sourceSizes);
+    deleteIntPointers(targetSizes);
+}
+
+QVector<int*> DropProperties::intToPointers(QVector<int> input) {
+    QVector<int*> result;
+    for (int item : input) {
+        result.append(new int(item));
+    }
+    return result;
+}
+
+QVector<int> DropProperties::pointersToInt(QVector<int *> input) {
+    QVector<int> result;
+    for (int* item : input) {
+        result.append(*item);
+    }
+    return result;
+}
+
+void DropProperties::deleteIntPointers(QVector<int *> input) {
+    for (int i = 0; i < input.size(); i++) {
+        delete input.at(i);
+    }
+    input.clear();
 }

@@ -37,6 +37,9 @@ private:
     void tabDragged(int index);
     int findTargetIndex(const Splitter* targetSplitter);
     void drawDragPixmap(QPixmap &pixmap, QRect tabRect, QString text);
+    DropProperties createDropProperties(TabWidget* sourceTabWidget,
+                                        Splitter* targetSplitter,
+                                        Splitter* sourceSplitter);
 
 private:
     const int mIndicatorMargin = 10;

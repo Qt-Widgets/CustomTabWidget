@@ -4,6 +4,19 @@
 
 class TabWidget;
 
+struct DropProperties {
+    int insertSize = -1, index = -1, dropToIndex = -1, sourceWidgetIndex = -1, targetSplitterSize = -1, dropWidgetIndex = -1;
+    bool onlyMove = false, removeSourceWidget = false, createNewSplitter = false, droppedOnSelf = false, insertAfter = false;
+    int* dragLocation = nullptr;
+    int* dropLocation = nullptr;
+    QVector<int*> sourceSizes, targetSizes; //yes pointers because we have to remember original drag and drop locations.
+
+    virtual ~DropProperties();
+    QVector<int*> intToPointers(QVector<int> input);
+    QVector<int> pointersToInt(QVector<int*> input);
+    void deleteIntPointers(QVector<int*> input);
+};
+
 class Splitter : public QSplitter {
 	Q_OBJECT
 public:
@@ -15,28 +28,16 @@ public:
 	Splitter* root();
 	void tabWidgetAboutToDelete(TabWidget* widget);
     Splitter* insertChildSplitter(int toIndex, Qt::Orientation orientation);
-    QList<int> splitIndexSizes(int insertSize, int index, int targetIndex, QList<int> sizes, bool onlyMove, int sourceIndex);
 
 	//for debuggin
 	QString indentation(int level);
 	QString splitterBranch(Splitter* splitter = nullptr, int level = 0);
     QString printSplitterTree();
 
-    //SplitterType is used when restoring splitter handle sizes after a drop operation.
+    //restoring splitter sizes after drag operation.
     enum SplitterType { sourceSplitter, targetSplitter, newSplitter };
-    struct RestoreSizeProperties {
-        int insertSize;
-        int index;
-        int targetIndex;
-        QList<int> sizes;
-        QList<int> targetSizes;
-        bool onlyMove;
-        int sourceIndex;
-        int targetSplitterSize;
-        int thisIndex;
-        bool sourceHasOnlyOneTab;
-    };
-    void restoreSizesAfterDrag(SplitterType splitterType, RestoreSizeProperties input);
+    void restoreSizesAfterDrag(SplitterType splitterType, DropProperties &p);
+    QVector<int> splitIndexSizes(DropProperties &p);
 
 public slots:
     void cleanupSplitterTree();

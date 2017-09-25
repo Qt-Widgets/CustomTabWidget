@@ -30,34 +30,26 @@ bool createNewSplitter
 
 //case of source splitter
 //NOTE!!!!! You also need to do this when dropping on tabbar.
-if (!internalDrop) {
-	if (removedIndex != -1) {
+if (!droppedOnSelf) {
+	if (sourceWidgetIndex != -1) {
 		//dragging last tab
-		int removedSize = sourceSplitter.sizes().at(removedIndex);
-		sourceSplitter.sizes.remove(removedIndex);
+		int removedSize = sourceSplitter.sizes().at(sourceWidgetIndex);
+		sourceSplitter.sizes.remove(sourceWidgetIndex);
 	} else {
 		//tabs still remain in the sourceSplitter, so nothing was removed.
-	}
-
-	if (createNewSplitter) {
-		//no need for size change for targetSplitter
-	} else {
-		//inserting to targetSplitter
-		//NOTE!!!! removedSize might not be correct if it's in the wrong orientation.
-		targetSplitter.sizes().insert(targetIndex, removedSize);
 	}
 }
 
 
 
 //case of target splitter
-if (internalDrop) {
-	if (removedIndex != -1) {
-		if (createNewSplitter) {
-			targetSplitter.sizes().remove(removedIndex);
+if (droppedOnSelf) {
+	if (sourceWidgetIndex != -1) {
+		if (!createNewSplitter) {
+			targetSplitter.sizes().remove(sourceWidgetIndex);
 		} else {
 			//widget only moved internally
-			targetSplitter.sizes().move(removedIndex, targetIndex);
+			targetSplitter.sizes().move(sourceWidgetIndex, targetIndex);
 		}
 	} else {
 		//tabs still remain in the sourceSplitter
@@ -70,6 +62,14 @@ if (internalDrop) {
 		}
 	}
 }
+if (!droppedOnSelf) {
+	if (createNewSplitter) {
+		//no need for size change for targetSplitter
+	} else {
+		//inserting to targetSplitter
+		//NOTE!!!! removedSize might not be correct if it's in the wrong orientation.
+		targetSplitter.sizes().insert(targetIndex, removedSize);
+	}
 } 
 
 
