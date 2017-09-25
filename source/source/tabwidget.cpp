@@ -56,7 +56,7 @@ TabWidget::~TabWidget() {
 }
 
 void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
-    if (mDrawOverlay->getRect() == QRect()) {
+    if (mDrawOverlay->isRectHidden()) {
         return;
     }
 
@@ -75,6 +75,7 @@ void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
 void TabWidget::dragEnterEvent(QDragEnterEvent* event) {
     if (event->mimeData()->hasText()) {
         mDrawOverlay->setRect(this->rect());
+        mDrawOverlay->setRectHidden(false);
         if (event->source() == this) {
             event->accept();
         } else {
@@ -87,6 +88,7 @@ void TabWidget::dragEnterEvent(QDragEnterEvent* event) {
 
 void TabWidget::dragLeaveEvent(QDragLeaveEvent* event) {
     mDrawOverlay->setRect(QRect());
+    mDrawOverlay->setRectHidden(true);
     event->accept();
 }
 
@@ -122,7 +124,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
     if (mime->hasText()) {
         if (mIndicatorArea == DropArea::INVALID) {
             qDebug() << "ERROR: drop area was invalid.";
-            mDrawOverlay->setRect(QRect());
+            mDrawOverlay->setRectHidden(true);
             event->ignore();
             return;
         }
@@ -144,7 +146,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
         if (sourceTabWidget == this && sourceTabWidget->count() == 1) {
             event->acceptProposedAction();
             event->accept();
-            mDrawOverlay->setRect(QRect());
+            mDrawOverlay->setRectHidden(true);
             return;
         }
 		
@@ -187,7 +189,7 @@ void TabWidget::dropEvent(QDropEvent *event) {
 
         event->acceptProposedAction();
         event->accept();
-        mDrawOverlay->setRect(QRect());
+        mDrawOverlay->setRectHidden(true);
     }
 }
 
@@ -299,6 +301,7 @@ void TabWidget::updateIndicatorRect() {
         }
 
         mDrawOverlay->setRect(rect);
+        mDrawOverlay->setRectHidden(false);
     }
 }
 

@@ -1,79 +1,11 @@
 TabWidget
 
 Next:
-	- When moving widgets around, splitter sizes should be remembered.
-	- Ability to drop to edges of the screen.
+	- Ability to drop to edges of the screen. 
+		* might be tough to do the visualisation, because now it's done in tabWidget, and you can't draw outside of the containing widget. This means that if we want to get the visualisation, we have to move drawing somewhere else. Maybe in the splitter? It would make sense for it to be there..
+		.. Oh, right.. does splitter even have a renderer?
+	- Save layout.
 	
 Low Priority:
 	- Floating window.
-	- Save layout.
 	- Improve visualisation. Make it even more clear where the dragged widget will end up.
-
-
-
-
-
-
-//source
-	dragging Last Tab
-		-remove index
-	source Tabs Remain
-//target
-	drop To Tabbar
-	drop on Index
-		-insert to existing splitter
-		-split index to two pieces
-
-
-
-bool createNewSplitter
-
-//case of source splitter
-//NOTE!!!!! You also need to do this when dropping on tabbar.
-if (!droppedOnSelf) {
-	if (sourceWidgetIndex != -1) {
-		//dragging last tab
-		int removedSize = sourceSplitter.sizes().at(sourceWidgetIndex);
-		sourceSplitter.sizes.remove(sourceWidgetIndex);
-	} else {
-		//tabs still remain in the sourceSplitter, so nothing was removed.
-	}
-}
-
-
-
-//case of target splitter
-if (droppedOnSelf) {
-	if (sourceWidgetIndex != -1) {
-		if (!createNewSplitter) {
-			targetSplitter.sizes().remove(sourceWidgetIndex);
-		} else {
-			//widget only moved internally
-			targetSplitter.sizes().move(sourceWidgetIndex, targetIndex);
-		}
-	} else {
-		//tabs still remain in the sourceSplitter
-
-		if (createNewSplitter) {
-			//no need for size changes
-		} else {
-			//insert to target splitter, with min size.
-			targetSplitter.sizes().insert(targetIndex, minimumSizeHint.size().height());
-		}
-	}
-}
-if (!droppedOnSelf) {
-	if (createNewSplitter) {
-		//no need for size change for targetSplitter
-	} else {
-		//inserting to targetSplitter
-		//NOTE!!!! removedSize might not be correct if it's in the wrong orientation.
-		targetSplitter.sizes().insert(targetIndex, removedSize);
-	}
-} 
-
-
-if (createNewSplitter) {
-	//case of new splitter
-	newSplitter.sizes = { halfSize, halfSize };
-}

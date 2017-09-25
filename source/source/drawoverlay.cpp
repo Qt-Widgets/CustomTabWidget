@@ -13,7 +13,7 @@ void DrawOverlay::setRect(QRect rect) {
 }
 
 void DrawOverlay::paintEvent(QPaintEvent* /*event*/) {
-    if (mRect != QRect()) {
+    if (!mHidden && mRect != QRect()) {
         QPainter painter(this);
         painter.setPen(QPen(QBrush(QColor("#ffbd00")), 3));
         painter.drawRect(mRect);
