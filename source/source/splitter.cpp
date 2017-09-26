@@ -162,11 +162,12 @@ QString Splitter::splitterBranch(Splitter* splitter, int level) {
 		TabWidget* tabWidget = dynamic_cast<TabWidget*>(child);
 		Splitter* splitter = dynamic_cast<Splitter*>(child);
 		if (tabWidget) {
-			text.append(indentation(level));
-			text.append(QString("tabWidget (%1)\n").arg(tabWidget->children().count()));
+            text.append(indentation(level));
+            text.append(QString("tabWidget\n"));
 		} else if (splitter) {
 			text.append(indentation(level));
-			text.append(QString("splitter (%1)\n").arg(splitter->children().count()));
+            QString o = splitter->orientation() == Qt::Vertical ? QString("v") : QString("h");
+            text.append(QString("splitter (%1)\n").arg(o));
 			if (splitter->children().count() != 0) {
 				text.append(splitterBranch(splitter, level + 1));
 			}
@@ -184,14 +185,7 @@ QString Splitter::printSplitterTree() {
 }
 
 void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, DropProperties& p) {
-    if (splitterType == sourceSplitter) {
-        if (p.removeSourceWidget && !p.droppedOnSelf) {
-            p.sizeRemoved = *p.dragLocation;
-            p.sourceSizes.removeOne(p.dragLocation);
-            p.dragLocation = nullptr;
-            setSizes(p.pointersToInt(p.sourceSizes).toList());
-        }
-    } else if (splitterType == targetSplitter) {
+    if (splitterType == targetSplitter) {
         setSizes(splitIndexSizes(p).toList());
     } else if (splitterType == newSplitter) {
         int halfSize = int(p.targetSplitterSize / 2);
@@ -212,10 +206,6 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
         *p.dropLocation = p.insertSize;
     } else {
         *p.dropLocation = availableSpace - p.insertSize;
-    }
-
-    if (!p.droppedOnSelf) {
-        *p.dropLocation += p.sizeRemoved;
     }
 
     int dropIndex = p.targetSizes.indexOf(p.dropLocation);

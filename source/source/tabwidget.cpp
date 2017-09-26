@@ -159,7 +159,6 @@ void TabWidget::dropEvent(QDropEvent *event) {
             insertTab(targetIndex, sourceTab, tabTitle);
             targetIndex = (targetIndex == -1) ? tabBar()->count() -1 : targetIndex;
             setCurrentIndex(targetIndex);
-            sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
         } else {
             //dropped on widget area
             Splitter* newSplitter = nullptr;
@@ -177,7 +176,6 @@ void TabWidget::dropEvent(QDropEvent *event) {
                 newTabWidget = new TabWidget(newSplitter);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
                 newSplitter->insertWidget(dropIndex, newTabWidget);
-                sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
                 newSplitter->restoreSizesAfterDrag(Splitter::newSplitter, p);
                 targetSplitter->setSizes(targetSize);
             } else {
@@ -185,7 +183,6 @@ void TabWidget::dropEvent(QDropEvent *event) {
                 targetSplitter->insertWidget(dropIndex, newTabWidget);
                 newTabWidget->insertTab(0, sourceTab, tabTitle);
                 p.insertSize = vertical ? newTabWidget->minimumSizeHint().height() : newTabWidget->minimumSizeHint().width();
-                sourceSplitter->restoreSizesAfterDrag(Splitter::sourceSplitter, p);
                 targetSplitter->restoreSizesAfterDrag(Splitter::targetSplitter, p);
             }
         }

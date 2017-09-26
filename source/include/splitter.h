@@ -36,7 +36,7 @@ public:
     QString printSplitterTree();
 
     //restoring splitter sizes after drag operation.
-    enum SplitterType { sourceSplitter, targetSplitter, newSplitter };
+    enum SplitterType { targetSplitter, newSplitter };
     void restoreSizesAfterDrag(SplitterType splitterType, DropProperties &p);
     QVector<int> splitIndexSizes(DropProperties &p);
 

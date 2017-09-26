@@ -9,18 +9,3 @@ Next:
 Low Priority:
 	- Floating window.
 	- Improve visualisation. Make it even more clear where the dragged widget will end up.
-
-
-
-testing changes #1
-
-
-
-
-
-
-
-
-
-
-
