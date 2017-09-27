@@ -188,6 +188,7 @@ void Splitter::restoreSizesAfterDrag(Splitter::SplitterType splitterType, DropPr
     if (splitterType == targetSplitter) {
         setSizes(splitIndexSizes(p).toList());
     } else if (splitterType == newSplitter) {
+        //todo: retain the size for this as well.
         int halfSize = int(p.targetSplitterSize / 2);
         setSizes({ halfSize, halfSize });
     }
@@ -199,19 +200,25 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
     }
 
     int availableSpace = *p.dropLocation;
+    int sizeToInsert = 0;
 
-    if (availableSpace / 2 < p.insertSize || p.insertSize == 0) {
-        //split in half when not enough space to do otherwise
-        p.insertSize = availableSpace / 2;
-        *p.dropLocation = p.insertSize;
+    //gets splitterHeight if source is horizontal, else gets split size from index.
+    int sourceSize = p.sourceSplitterHeight != -1 ? p.sourceSplitterHeight : *p.dragLocation;
+
+    //check if there is space to drop without resizing.
+    bool dontResize = (availableSpace - p.widgetMinSize - sourceSize) > 0;
+
+    if (dontResize) {
+        sizeToInsert = sourceSize;
     } else {
-        *p.dropLocation = availableSpace - p.insertSize;
+        //split in half
+        sizeToInsert = int(availableSpace / 2);
+        *p.dropLocation = sizeToInsert;
     }
 
     int dropIndex = p.targetSizes.indexOf(p.dropLocation);
     dropIndex = p.insertAfter ? dropIndex + 1 : dropIndex;
-    p.targetSizes.insert(dropIndex, std::make_shared<int>(*p.dropLocation));
-
+    p.targetSizes.insert(dropIndex, std::make_shared<int>(sizeToInsert));
     return p.pointersToInt(p.targetSizes);
 }
 
