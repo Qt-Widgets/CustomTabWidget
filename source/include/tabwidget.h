@@ -30,6 +30,8 @@ protected:
 private slots:
 	void onAddNewTab();
     void onHasNoTabs();
+	void closeTab(int index);
+	void onTabDestroyed(QObject* object);
 
 private:
     void updateIndicatorRect();

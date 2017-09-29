@@ -44,6 +44,7 @@ TabWidget::TabWidget(QWidget *parent)
 	QObject::connect(mMenuButton, &QPushButton::clicked, this, &TabWidget::onAddNewTab);
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
     QObject::connect(mTabBar, &TabBar::hasNoTabs, this, &TabWidget::onHasNoTabs);
+	QObject::connect(mTabBar, &TabBar::tabCloseRequested, this, &TabWidget::closeTab);
 }
 
 TabWidget::~TabWidget() {
@@ -232,6 +233,21 @@ void TabWidget::onAddNewTab() {
 
 void TabWidget::onHasNoTabs() {
     deleteLater();
+}
+
+void TabWidget::closeTab(int index) {
+	QObject::connect(widget(index), &QWidget::destroyed, this, &TabWidget::onTabDestroyed);
+	widget(index)->deleteLater();
+}
+
+void TabWidget::onTabDestroyed(QObject* object) {
+	QWidget* destroyedWidget = dynamic_cast<QWidget*>(object);
+	Q_ASSERT(destroyedWidget);
+	QObject::disconnect(destroyedWidget, &QWidget::destroyed, this, &TabWidget::onTabDestroyed);
+	int index = this->indexOf(destroyedWidget);
+	if (tabBar()->count() == 1 && index != -1) {
+		onHasNoTabs();
+	}
 }
 
 void TabWidget::updateIndicatorArea(QPoint& p) {

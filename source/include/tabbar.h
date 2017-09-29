@@ -17,7 +17,6 @@ protected:
 	void mousePressEvent(QMouseEvent* event) override;
 	void mouseMoveEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
-    void onCloseTab(int index);
 
 signals:
 	void mouseDragged(int index, int tabCount);
