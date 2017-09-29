@@ -9,3 +9,12 @@ Next:
 Low Priority:
 	- Floating window.
 	- Improve visualisation. Make it even more clear where the dragged widget will end up.
+
+
+
+
+Restore tab size in Spine
+=============================
+	- When Orientation is different - use preferred size, (it could be better to split in half, because this does not always work well)
+		else, use current index size. (seems like this does not work well for vertical size)
+	- When index is removed from widget, and moved to another (last tab). The index size is also removed. Looks like the viewport has priority when it comes to where the available space is inserted to.
