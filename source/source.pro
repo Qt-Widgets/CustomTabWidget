@@ -9,6 +9,8 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = source
 TEMPLATE = app
 
+QMAKE_MAC_SDK = macosx10.13
+
 # Compiler warnings when using depricated qt features.
 DEFINES += QT_DEPRECATED_WARNINGS
 
