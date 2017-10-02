@@ -21,8 +21,8 @@ static QString sourceTabTitleMimeDataKey() { return QStringLiteral("source/tabti
 
 TabWidget::TabWidget(QWidget *parent)
     : QTabWidget(parent)
+    , mTabBar(new TabBar(this))
     , mDrawOverlay(new DrawOverlay(this))
-	, mTabBar(new TabBar(this))
 {
     setTabBar(mTabBar);
     setAcceptDrops(true);
@@ -36,6 +36,8 @@ TabWidget::TabWidget(QWidget *parent)
 		"   padding-top: 2px;"
 		"   padding-bottom: 2px;"
 		"}");
+
+    mDrawOverlay->raise();
 
 	mMenuButton = new QPushButton("+", this);
 	mMenuButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
