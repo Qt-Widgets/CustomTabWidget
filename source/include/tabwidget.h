@@ -44,7 +44,6 @@ private:
                                         Splitter* sourceSplitter);
 
 private:
-    const int mIndicatorMargin = 10;
     DropArea mIndicatorArea = DropArea::INVALID;
     DrawOverlay* mDrawOverlay;
 	TabBar* mTabBar;

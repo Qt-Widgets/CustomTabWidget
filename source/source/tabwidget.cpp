@@ -350,10 +350,6 @@ void TabWidget::tabDragged(int index) {
     pixmap.setDevicePixelRatio(dpr);
     drawDragPixmap(pixmap, tabRect, tabText(index));
 
-//	QPixmap pixmap(tabBar()->tabRect(index).size() * dpr);
-//	pixmap.setDevicePixelRatio(dpr);
-//	render(&pixmap);
-
     QDrag* drag = new QDrag(this);
     drag->setMimeData(mimeData);
     drag->setPixmap(pixmap);
@@ -363,10 +359,6 @@ void TabWidget::tabDragged(int index) {
     if (tabBar()->count() == 0) {
         deleteLater();
     }
-
-    //could not find any other way for doing this, but use invokeMethod, the problem is that
-    //the cleanupSplitterTree must be called after all deleteLater events has been processed.
-    QMetaObject::invokeMethod(parentWidget(), "cleanupSplitterTree", Qt::QueuedConnection);
 }
 
 void TabWidget::drawDragPixmap(QPixmap &pixmap, QRect tabRect, QString text) {

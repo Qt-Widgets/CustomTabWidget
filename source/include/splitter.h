@@ -41,9 +41,10 @@ public:
     enum SplitterType { targetSplitter, newSplitter };
     void restoreSizesAfterDrag(SplitterType splitterType, DropProperties &p);
     QVector<int> splitIndexSizes(DropProperties &p);
+    void insertWidget(int index, QWidget* widget);
 
 public slots:
-    void cleanupSplitterTree();
+    void cleanupSplitterTree(QObject *object);
 
 protected:
     void cleanSplitter(Splitter* splitter);

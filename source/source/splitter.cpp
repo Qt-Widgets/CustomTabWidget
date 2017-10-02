@@ -71,7 +71,6 @@ void Splitter::cleanSplitter(Splitter* splitter) {
         //in this case there is only one child, so for this we want to
         //delete this splitter and move the child directly to parent object.
         Q_ASSERT(splitter->parentWidget());
-        Q_ASSERT(childWidgets.first());
 
         if (childWidgets.count() == 1) {
             //move child to parent.
@@ -108,7 +107,7 @@ void Splitter::cleanSplitter(Splitter* splitter) {
     }
 }
 
-void Splitter::cleanupSplitterTree() {
+void Splitter::cleanupSplitterTree(QObject* /*object*/) {
 	if (!mRoot) {
 		return;
 	}
@@ -124,7 +123,7 @@ void Splitter::tabWidgetAboutToDelete(TabWidget* widget) {
 	if (!widget) {
 		return;
 	}
-    cleanupSplitterTree();
+    cleanupSplitterTree(widget);
 }
 
 Splitter *Splitter::insertChildSplitter(int toIndex, Qt::Orientation orientation) {
@@ -220,6 +219,11 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
     dropIndex = p.insertAfter ? dropIndex + 1 : dropIndex;
     p.targetSizes.insert(dropIndex, std::make_shared<int>(sizeToInsert));
     return p.pointersToInt(p.targetSizes);
+}
+
+void Splitter::insertWidget(int index, QWidget *widget) {
+    QSplitter::insertWidget(index, widget);
+    QObject::connect(widget, &QWidget::destroyed, this, &Splitter::cleanupSplitterTree);
 }
 
 QVector<std::shared_ptr<int> > DropProperties::intToPointers(QVector<int> input) {
