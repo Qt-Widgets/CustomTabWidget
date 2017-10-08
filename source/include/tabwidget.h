@@ -8,6 +8,7 @@
 
 class QDrag;
 class TabBar;
+class QMenu;
 
 class TabWidget : public QTabWidget
 {
@@ -16,6 +17,8 @@ public:
     explicit TabWidget(QWidget *parent = 0);
     virtual ~TabWidget();
     enum DropArea { TABBAR, TOP, RIGHT, BOTTOM, LEFT, INVALID };
+    void addMenuActions(QList<QAction*> actions);
+    void clearMenuActions();
 
 protected:
     void dragMoveEvent(QDragMoveEvent* event) override;
@@ -30,10 +33,13 @@ protected:
 private slots:
 	void onAddNewTab();
     void onHasNoTabs();
-	void closeTab(int index);
+    void closeCurrentTab();
+    void floatCurrentTab();
 	void onTabDestroyed(QObject* object);
+    void onCornerMenuClicked();
 
 private:
+    void addDefaultMenuActions();
     void updateIndicatorRect();
     void updateIndicatorArea(QPoint& p);
     void tabDragged(int index);
@@ -48,4 +54,5 @@ private:
     DrawOverlay* mDrawOverlay;
 	TabBar* mTabBar;
 	QPushButton* mMenuButton;
+    QMenu* mCornerMenu;
 };

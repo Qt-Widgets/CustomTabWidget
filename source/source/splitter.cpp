@@ -2,8 +2,6 @@
 #include "include/tabwidget.h"
 #include "mainwindow.h"
 
-#include <qDebug>
-
 Splitter* Splitter::mRoot = nullptr;
 
 Splitter::Splitter(QWidget *parent) : QSplitter(parent) {
@@ -210,7 +208,6 @@ QVector<int> Splitter::splitIndexSizes(DropProperties& p) {
     if (dontResize) {
         sizeToInsert = sourceSize;
     } else {
-        //split in half
         sizeToInsert = int(availableSpace / 2);
         *p.dropLocation = sizeToInsert;
     }

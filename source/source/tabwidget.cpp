@@ -11,6 +11,7 @@
 #include <QTextOption>
 #include <QPen>
 #include <QPainter>
+#include <QMenu>
 
 #include "include/tabwidget.h"
 #include "include/tabbar.h"
@@ -23,10 +24,11 @@ TabWidget::TabWidget(QWidget *parent)
     : QTabWidget(parent)
     , mTabBar(new TabBar(this))
     , mDrawOverlay(new DrawOverlay(this))
+    , mCornerMenu(new QMenu)
 {
     setTabBar(mTabBar);
     setAcceptDrops(true);
-    setTabsClosable(true);
+    //setTabsClosable(true);
 
     //setting style for debugging purposes
 	static QString style("QPushButton {"
@@ -39,14 +41,16 @@ TabWidget::TabWidget(QWidget *parent)
 
     mDrawOverlay->raise();
 
-	mMenuButton = new QPushButton("+", this);
+    mMenuButton = new QPushButton("=", this);
 	mMenuButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 	mMenuButton->setStyleSheet(style);
-	setCornerWidget(mMenuButton);
-	QObject::connect(mMenuButton, &QPushButton::clicked, this, &TabWidget::onAddNewTab);
+    mMenuButton->setMenu(mCornerMenu);
+    setCornerWidget(mMenuButton);
+    addDefaultMenuActions();
+
+    QObject::connect(mMenuButton, &QPushButton::clicked, this, &TabWidget::onCornerMenuClicked);
     QObject::connect(mTabBar, &TabBar::mouseDragged, this, &TabWidget::tabDragged);
     QObject::connect(mTabBar, &TabBar::hasNoTabs, this, &TabWidget::onHasNoTabs);
-	QObject::connect(mTabBar, &TabBar::tabCloseRequested, this, &TabWidget::closeTab);
 }
 
 TabWidget::~TabWidget() {
@@ -55,7 +59,17 @@ TabWidget::~TabWidget() {
 	Splitter* splitter = dynamic_cast<Splitter*>(parentWidget());
 	if (splitter) {
 		splitter->tabWidgetAboutToDelete(this);
-	}
+    }
+}
+
+void TabWidget::addMenuActions(QList<QAction*> actions) {
+    mCornerMenu->addSeparator();
+    mCornerMenu->addActions(actions);
+}
+
+void TabWidget::clearMenuActions() {
+    mCornerMenu->clear();
+    addDefaultMenuActions();
 }
 
 void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
@@ -77,6 +91,14 @@ void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
 
 void TabWidget::dragEnterEvent(QDragEnterEvent* event) {
     if (event->mimeData()->hasText()) {
+        TabWidget* sourceTabWidget = static_cast<TabWidget*>(event->source());
+        Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
+        Splitter* sourceSplitter = dynamic_cast<Splitter*>(sourceTabWidget->parentWidget());
+        if (sourceSplitter != targetSplitter) {
+            event->ignore();
+            return;
+        }
+
         mDrawOverlay->setRect(this->rect());
         mDrawOverlay->setRectHidden(false);
         if (event->source() == this) {
@@ -142,12 +164,6 @@ void TabWidget::dropEvent(QDropEvent *event) {
         Q_ASSERT(sourceTabWidget);
         QWidget* sourceTab = sourceTabWidget->widget(sourceTabIndex);
 		Q_ASSERT(sourceTab);
-        Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
-        Q_ASSERT(targetSplitter);
-        Splitter* sourceSplitter = dynamic_cast<Splitter*>(sourceTabWidget->parentWidget());
-        Q_ASSERT(sourceSplitter);
-
-        DropProperties p = createDropProperties(sourceTabWidget, targetSplitter, sourceSplitter);
 
         if (sourceTabWidget == this && sourceTabWidget->count() == 1) {
             event->acceptProposedAction();
@@ -166,6 +182,14 @@ void TabWidget::dropEvent(QDropEvent *event) {
             setCurrentIndex(targetIndex);
         } else {
             //dropped on widget area
+
+            Splitter* targetSplitter = dynamic_cast<Splitter*>(parentWidget());
+            Q_ASSERT(targetSplitter);
+            Splitter* sourceSplitter = dynamic_cast<Splitter*>(sourceTabWidget->parentWidget());
+            Q_ASSERT(sourceSplitter);
+
+            DropProperties p = createDropProperties(sourceTabWidget, targetSplitter, sourceSplitter);
+
             Splitter* newSplitter = nullptr;
             TabWidget* newTabWidget = nullptr;
             bool vertical = (targetSplitter->orientation() == Qt::Vertical);
@@ -237,9 +261,34 @@ void TabWidget::onHasNoTabs() {
     deleteLater();
 }
 
-void TabWidget::closeTab(int index) {
+void TabWidget::closeCurrentTab() {
+    int index = currentIndex();
 	QObject::connect(widget(index), &QWidget::destroyed, this, &TabWidget::onTabDestroyed);
-	widget(index)->deleteLater();
+    widget(index)->deleteLater();
+}
+
+void TabWidget:: floatCurrentTab() {
+    Splitter* parentSplitter = dynamic_cast<Splitter*>(parentWidget());
+    QMainWindow* mainWindow = dynamic_cast<QMainWindow*>(parentSplitter->root()->parentWidget());
+
+    if (tabBar()->count() == 1) {
+        //float tabWidget
+        setParent(mainWindow);
+        setWindowFlags(Qt::Window);
+        show();
+    } else {
+        //todo: allow creating new splitter with new root.. This would allow us to
+        //split tabs inside this new context.
+
+        //create new floating tabwidget, add current tab to it.
+        TabWidget* tabWidget = new TabWidget(mainWindow);
+        QWidget* currentPage = this->widget(currentIndex());
+        QString text = tabText(currentIndex());
+        tabWidget->addTab(currentPage, text);
+        tabWidget->setWindowFlags(Qt::Window);
+        tabWidget->show();
+    }
+    parentSplitter->update();
 }
 
 void TabWidget::onTabDestroyed(QObject* object) {
@@ -249,7 +298,16 @@ void TabWidget::onTabDestroyed(QObject* object) {
 	int index = this->indexOf(destroyedWidget);
 	if (tabBar()->count() == 1 && index != -1) {
 		onHasNoTabs();
-	}
+    }
+}
+
+void TabWidget::onCornerMenuClicked() {
+    mMenuButton->showMenu();
+}
+
+void TabWidget::addDefaultMenuActions() {
+    mCornerMenu->addAction("Close Panel", this, &TabWidget::closeCurrentTab);
+    mCornerMenu->addAction("Float Panel", this, &TabWidget::floatCurrentTab);
 }
 
 void TabWidget::updateIndicatorArea(QPoint& p) {
@@ -267,16 +325,20 @@ void TabWidget::updateIndicatorArea(QPoint& p) {
     bool rightArea = (marginX < p.x()) && !tabBarArea;
     bool leftArea = (marginX > p.x()) && !tabBarArea;
 
-    if (topArea) {
+    Splitter* parentSplitter = dynamic_cast<Splitter*>(parentWidget());
+
+    if (topArea && parentSplitter) {
         mIndicatorArea = DropArea::TOP;
-    } else if (bottomArea) {
+    } else if (bottomArea && parentSplitter) {
         mIndicatorArea = DropArea::BOTTOM;
-    } else if (rightArea) {
+    } else if (rightArea && parentSplitter) {
         mIndicatorArea = DropArea::RIGHT;
-    } else if (leftArea) {
+    } else if (leftArea && parentSplitter) {
         mIndicatorArea = DropArea::LEFT;
     } else if (tabBarArea) {
         mIndicatorArea = DropArea::TABBAR;
+    } else {
+        mIndicatorArea = DropArea::INVALID;
     }
 }
 
