@@ -43,6 +43,10 @@ public:
     QVector<int> splitIndexSizes(DropProperties &p);
     void insertWidget(int index, QWidget* widget);
 
+    QByteArray saveState() const = delete; //removes the default functionality
+    void saveStateRecursive();
+    QString branchState(Splitter* splitter, int level = 0);
+
 public slots:
     void cleanupSplitterTree(QObject *object);
 

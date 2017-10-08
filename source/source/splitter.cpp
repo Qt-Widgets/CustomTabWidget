@@ -223,6 +223,71 @@ void Splitter::insertWidget(int index, QWidget *widget) {
     QObject::connect(widget, &QWidget::destroyed, this, &Splitter::cleanupSplitterTree);
 }
 
+void Splitter::saveStateRecursive() {
+//  splitter(horizontal) {
+//      tabWidget {
+//          splitSize = 50%
+//          tabs {"inspector", "history"}
+//      }
+//      splitter(vertical) {
+//          splitSize = 50%
+//          ...
+//      }
+//  }
+    QString text;
+    QString o = mRoot->orientation() == Qt::Vertical ? QString("v") : QString("h");
+    text.append(QString("splitter (%1) {\n").arg(o));
+    text.append(branchState(mRoot, 1));
+    text.append(QString("}\n"));
+
+    qDebug().noquote() << text;
+}
+
+QString Splitter::branchState(Splitter* splitter, int level) {
+    if (!splitter) {
+        return QString();
+    }
+
+    QString text;
+
+    for (auto child : splitter->children()) {
+        TabWidget* tabWidget = dynamic_cast<TabWidget*>(child);
+        Splitter* childSplitter = dynamic_cast<Splitter*>(child);
+        if (tabWidget) {
+            text.append(indentation(level));
+            text.append(QString("tabWidget {\n"));
+
+            text.append(indentation(level + 1));
+            //todo get percentage
+            int size = splitter->sizes().at(splitter->indexOf(tabWidget));
+            text.append(QString("size = %1\n").arg(QString::number(size)));
+
+            text.append(indentation(level + 1));
+            text.append(QString("tabs {%1}\n").arg(tabWidget->getTabsAsType()));
+
+            text.append(indentation(level));
+            text.append(QString("}\n"));
+        } else if (childSplitter) {
+            text.append(indentation(level));
+            QString o = childSplitter->orientation() == Qt::Vertical ? QString("v") : QString("h");
+            text.append(QString("splitter (%1) {\n").arg(o));
+
+            text.append(indentation(level + 1));
+            //todo get percentage
+            int size = splitter->sizes().at(splitter->indexOf(childSplitter));
+            text.append(QString("size = %1\n").arg(QString::number(size)));
+
+            if (childSplitter->children().count() != 0) {
+                text.append(childSplitter->branchState(childSplitter, level + 1));
+            }
+            text.append(indentation(level));
+            text.append(QString("}\n"));
+        }
+    }
+
+    return text;
+}
+
 QVector<std::shared_ptr<int> > DropProperties::intToPointers(QVector<int> input) {
     QVector<std::shared_ptr<int>> result;
     for (int item : input) {

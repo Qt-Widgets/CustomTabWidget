@@ -19,6 +19,7 @@ public:
     enum DropArea { TABBAR, TOP, RIGHT, BOTTOM, LEFT, INVALID };
     void addMenuActions(QList<QAction*> actions);
     void clearMenuActions();
+    QString getTabsAsType();
 
 protected:
     void dragMoveEvent(QDragMoveEvent* event) override;

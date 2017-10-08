@@ -72,6 +72,17 @@ void TabWidget::clearMenuActions() {
     addDefaultMenuActions();
 }
 
+QString TabWidget::getTabsAsType() {
+    QString tabs;
+    for (int i = 0; i < tabBar()->count(); i++) {
+        if (i != 0) {
+            tabs.append(",");
+        }
+        tabs.append(tabText(i));
+    }
+    return tabs;
+}
+
 void TabWidget::dragMoveEvent(QDragMoveEvent* event) {
     if (mDrawOverlay->isRectHidden()) {
         return;
@@ -308,6 +319,10 @@ void TabWidget::onCornerMenuClicked() {
 void TabWidget::addDefaultMenuActions() {
     mCornerMenu->addAction("Close Panel", this, &TabWidget::closeCurrentTab);
     mCornerMenu->addAction("Float Panel", this, &TabWidget::floatCurrentTab);
+    Splitter* splitter = dynamic_cast<Splitter*>(parentWidget());
+    if (splitter) {
+        mCornerMenu->addAction("Save state", splitter, &Splitter::saveStateRecursive);
+    }
 }
 
 void TabWidget::updateIndicatorArea(QPoint& p) {
