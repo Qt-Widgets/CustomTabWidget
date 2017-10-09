@@ -4,6 +4,7 @@
 #include <memory>
 
 class TabWidget;
+class QXmlStreamWriter;
 
 struct DropProperties {
     int widgetMinSize = -1, targetSplitterSize = -1, sizeRemoved = 0;
@@ -45,13 +46,16 @@ public:
 
     QByteArray saveState() const = delete; //removes the default functionality
     void saveStateRecursive();
-    QString branchState(Splitter* splitter, int level = 0);
+    void restoreStateRecursive();
+    void branchState(Splitter* splitter, QXmlStreamWriter &xmlWriter);
 
 public slots:
     void cleanupSplitterTree(QObject *object);
 
 protected:
     void cleanSplitter(Splitter* splitter);
-
 	static Splitter* mRoot;
+
+private:
+    QString mFilename = "/Users/petrij/CustomTabWidget/test.xml";
 };

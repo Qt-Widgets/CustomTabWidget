@@ -322,6 +322,7 @@ void TabWidget::addDefaultMenuActions() {
     Splitter* splitter = dynamic_cast<Splitter*>(parentWidget());
     if (splitter) {
         mCornerMenu->addAction("Save state", splitter, &Splitter::saveStateRecursive);
+        mCornerMenu->addAction("Restore state", splitter, &Splitter::restoreStateRecursive);
     }
 }
 

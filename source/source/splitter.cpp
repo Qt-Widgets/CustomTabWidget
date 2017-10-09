@@ -1,3 +1,8 @@
+#include <QFile>
+#include <QXmlStreamWriter>
+#include <QDir>
+#include <QDebug>
+
 #include "include/splitter.h"
 #include "include/tabwidget.h"
 #include "mainwindow.h"
@@ -224,68 +229,68 @@ void Splitter::insertWidget(int index, QWidget *widget) {
 }
 
 void Splitter::saveStateRecursive() {
-//  splitter(horizontal) {
-//      tabWidget {
-//          splitSize = 50%
-//          tabs {"inspector", "history"}
-//      }
-//      splitter(vertical) {
-//          splitSize = 50%
-//          ...
-//      }
-//  }
-    QString text;
-    QString o = mRoot->orientation() == Qt::Vertical ? QString("v") : QString("h");
-    text.append(QString("splitter (%1) {\n").arg(o));
-    text.append(branchState(mRoot, 1));
-    text.append(QString("}\n"));
+    QFile file(mFilename);
+    file.open(QIODevice::WriteOnly);
 
-    qDebug().noquote() << text;
+    QXmlStreamWriter xmlWriter(&file);
+    xmlWriter.setAutoFormatting(true);
+    xmlWriter.writeStartDocument();
+    xmlWriter.writeStartElement("root");
+    xmlWriter.writeTextElement("Orientation", orientation() == Qt::Vertical ? "Vertical" : "Horizontal" );
+
+    branchState(mRoot, xmlWriter);
+
+    xmlWriter.writeEndElement();
+    xmlWriter.writeEndDocument();
+    file.close();
 }
 
-QString Splitter::branchState(Splitter* splitter, int level) {
-    if (!splitter) {
-        return QString();
-    }
+void Splitter::restoreStateRecursive() {
+    QFile file(mFilename);
+    file.open(QIODevice::ReadOnly);
 
-    QString text;
+    QXmlStreamReader Rxml(&file);
+    Rxml.readNext();
+
+    while(!Rxml.atEnd()) {
+        qDebug().noquote() << Rxml.readElementText(QXmlStreamReader::IncludeChildElements);
+        //qDebug() << Rxml.name();
+        //qDebug() << Rxml.text();
+        Rxml.readNext();
+        //Rxml.readNext();
+//        if (Rxml.isStartElement() && Rxml.name() == "root") {
+//            qDebug() << Rxml.name();
+//            qDebug() << Rxml.readElementText();
+//        }
+    }
+    file.close();
+}
+
+void Splitter::branchState(Splitter* splitter, QXmlStreamWriter& xmlWriter) {
+    if (!splitter) {
+        return;
+    }
 
     for (auto child : splitter->children()) {
         TabWidget* tabWidget = dynamic_cast<TabWidget*>(child);
         Splitter* childSplitter = dynamic_cast<Splitter*>(child);
         if (tabWidget) {
-            text.append(indentation(level));
-            text.append(QString("tabWidget {\n"));
-
-            text.append(indentation(level + 1));
-            //todo get percentage
+            xmlWriter.writeStartElement("tabWidget");
             int size = splitter->sizes().at(splitter->indexOf(tabWidget));
-            text.append(QString("size = %1\n").arg(QString::number(size)));
-
-            text.append(indentation(level + 1));
-            text.append(QString("tabs {%1}\n").arg(tabWidget->getTabsAsType()));
-
-            text.append(indentation(level));
-            text.append(QString("}\n"));
+            xmlWriter.writeTextElement("size", QString::number(size));
+            xmlWriter.writeTextElement("tabs", tabWidget->getTabsAsType());
+            xmlWriter.writeEndElement();
         } else if (childSplitter) {
-            text.append(indentation(level));
-            QString o = childSplitter->orientation() == Qt::Vertical ? QString("v") : QString("h");
-            text.append(QString("splitter (%1) {\n").arg(o));
-
-            text.append(indentation(level + 1));
-            //todo get percentage
+            xmlWriter.writeStartElement("splitter");
+            xmlWriter.writeTextElement("Orientation", childSplitter->orientation() == Qt::Vertical ? "Vertical" : "Horizontal" );
             int size = splitter->sizes().at(splitter->indexOf(childSplitter));
-            text.append(QString("size = %1\n").arg(QString::number(size)));
-
+            xmlWriter.writeTextElement("size", QString::number(size));
             if (childSplitter->children().count() != 0) {
-                text.append(childSplitter->branchState(childSplitter, level + 1));
+                childSplitter->branchState(childSplitter, xmlWriter);
             }
-            text.append(indentation(level));
-            text.append(QString("}\n"));
+            xmlWriter.writeEndElement();
         }
     }
-
-    return text;
 }
 
 QVector<std::shared_ptr<int> > DropProperties::intToPointers(QVector<int> input) {
